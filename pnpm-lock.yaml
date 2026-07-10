@@ -131,7 +131,7 @@ importers:
         version: 10.5.2(postcss@8.5.16)
       eslint:
         specifier: ^9.18.0
-        version: 9.39.4(jiti@1.21.7)
+        version: 9.39.4(jiti@2.7.0)
       postcss:
         specifier: ^8.5.1
         version: 8.5.16
@@ -220,9 +220,27 @@ importers:
 
   packages/auth:
     dependencies:
+      '@goldos/database':
+        specifier: workspace:*
+        version: link:../database
       '@goldos/types':
         specifier: workspace:*
         version: link:../types
+      '@goldos/utils':
+        specifier: workspace:*
+        version: link:../utils
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
+      jose:
+        specifier: ^6.0.11
+        version: 6.2.3
+      otpauth:
+        specifier: ^9.4.0
+        version: 9.5.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@goldos/eslint-config':
         specifier: workspace:*
@@ -230,6 +248,12 @@ importers:
       '@goldos/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@types/bcryptjs':
+        specifier: ^2.4.6
+        version: 2.4.6
+      '@types/node':
+        specifier: ^22.12.0
+        version: 22.20.1
       eslint:
         specifier: ^9.18.0
         version: 9.39.4(jiti@2.7.0)
@@ -373,7 +397,7 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       eslint:
         specifier: ^9.18.0
-        version: 9.39.4(jiti@2.7.0)
+        version: 9.39.4(jiti@1.21.7)
       react:
         specifier: ^19.0.0
         version: 19.2.7
@@ -987,6 +1011,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@noble/hashes@2.2.0':
+    resolution:
+      {
+        integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==,
+      }
+    engines: { node: '>= 20.19.0' }
+
   '@nodelib/fs.scandir@2.1.5':
     resolution:
       {
@@ -1156,6 +1187,12 @@ packages:
       }
     cpu: [arm64]
     os: [win32]
+
+  '@types/bcryptjs@2.4.6':
+    resolution:
+      {
+        integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==,
+      }
 
   '@types/conventional-commits-parser@5.0.2':
     resolution:
@@ -1477,6 +1514,13 @@ packages:
         integrity: sha512-c/jurFrDLyui7o1J86yLkRu4LMsTYcBohveus7/I2Hzdn9KIP2bdJPTue/lR1KH46enoPbD77GKeSYNdyPoD3Q==,
       }
     engines: { node: '>=6.0.0' }
+    hasBin: true
+
+  bcryptjs@3.0.3:
+    resolution:
+      {
+        integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==,
+      }
     hasBin: true
 
   binary-extensions@2.3.0:
@@ -2815,6 +2859,12 @@ packages:
       }
     hasBin: true
 
+  jose@6.2.3:
+    resolution:
+      {
+        integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==,
+      }
+
   js-tokens@4.0.0:
     resolution:
       {
@@ -3258,6 +3308,12 @@ packages:
         integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==,
       }
     engines: { node: '>= 0.8.0' }
+
+  otpauth@9.5.1:
+    resolution:
+      {
+        integrity: sha512-fJmDAHc8wImfqqqOXIlBvT1dEKrZK0Cmb2VEgScpNTolCz0PHh6ExUZGv4sLtOsWNaHCQlD+rRqaPgnoxFoZjQ==,
+      }
 
   own-keys@1.0.1:
     resolution:
@@ -4681,6 +4737,8 @@ snapshots:
   '@next/swc-win32-x64-msvc@15.5.20':
     optional: true
 
+  '@noble/hashes@2.2.0': {}
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -4771,6 +4829,8 @@ snapshots:
 
   '@turbo/windows-arm64@2.10.4':
     optional: true
+
+  '@types/bcryptjs@2.4.6': {}
 
   '@types/conventional-commits-parser@5.0.2':
     dependencies:
@@ -5012,6 +5072,8 @@ snapshots:
   balanced-match@4.0.4: {}
 
   baseline-browser-mapping@2.10.42: {}
+
+  bcryptjs@3.0.3: {}
 
   binary-extensions@2.3.0: {}
 
@@ -5921,6 +5983,8 @@ snapshots:
 
   jiti@2.7.0: {}
 
+  jose@6.2.3: {}
+
   js-tokens@4.0.0: {}
 
   js-yaml@4.3.0:
@@ -6170,6 +6234,10 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
       word-wrap: 1.2.5
+
+  otpauth@9.5.1:
+    dependencies:
+      '@noble/hashes': 2.2.0
 
   own-keys@1.0.1:
     dependencies:

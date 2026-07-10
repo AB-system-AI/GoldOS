@@ -21,16 +21,16 @@ model PasswordResetToken {
 }
 
 model EmailVerificationToken {
-  id        String                  @id @default(uuid()) @db.Uuid
-  userId    String                  @map("user_id") @db.Uuid
-  email     String                  @db.VarChar(255)
-  tokenHash String                  @map("token_hash") @db.VarChar(255)
-  status    VerificationTokenStatus @default(PENDING)
-  expiresAt DateTime                @map("expires_at") @db.Timestamptz(6)
-  verifiedAt DateTime?              @map("verified_at") @db.Timestamptz(6)
-  createdAt DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  id         String                  @id @default(uuid()) @db.Uuid
+  userId     String                  @map("user_id") @db.Uuid
+  email      String                  @db.VarChar(255)
+  tokenHash  String                  @map("token_hash") @db.VarChar(255)
+  status     VerificationTokenStatus @default(PENDING)
+  expiresAt  DateTime                @map("expires_at") @db.Timestamptz(6)
+  verifiedAt DateTime?               @map("verified_at") @db.Timestamptz(6)
+  createdAt  DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?               @map("deleted_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -41,18 +41,18 @@ model EmailVerificationToken {
 }
 
 model PhoneVerificationToken {
-  id         String                  @id @default(uuid()) @db.Uuid
-  userId     String                  @map("user_id") @db.Uuid
-  phone      String                  @db.VarChar(30)
-  codeHash   String                  @map("code_hash") @db.VarChar(255)
-  status     VerificationTokenStatus @default(PENDING)
-  expiresAt  DateTime                @map("expires_at") @db.Timestamptz(6)
-  verifiedAt DateTime?               @map("verified_at") @db.Timestamptz(6)
-  attempts   Int                     @default(0)
-  maxAttempts Int                    @default(5) @map("max_attempts")
-  createdAt  DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt  DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  id          String                  @id @default(uuid()) @db.Uuid
+  userId      String                  @map("user_id") @db.Uuid
+  phone       String                  @db.VarChar(30)
+  codeHash    String                  @map("code_hash") @db.VarChar(255)
+  status      VerificationTokenStatus @default(PENDING)
+  expiresAt   DateTime                @map("expires_at") @db.Timestamptz(6)
+  verifiedAt  DateTime?               @map("verified_at") @db.Timestamptz(6)
+  attempts    Int                     @default(0)
+  maxAttempts Int                     @default(5) @map("max_attempts")
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?               @map("deleted_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -102,25 +102,25 @@ model TrustedDevice {
 }
 
 model LoginAttempt {
-  id            String             @id @default(uuid()) @db.Uuid
-  tenantId      String?            @map("tenant_id") @db.Uuid
-  userId        String?            @map("user_id") @db.Uuid
-  email         String?            @db.VarChar(255)
-  result        LoginAttemptResult
-  failureReason String?            @map("failure_reason") @db.VarChar(100)
-  ipAddress     String?            @map("ip_address") @db.VarChar(45)
-  userAgent     String?            @map("user_agent") @db.Text
-  countryCode   String?            @map("country_code") @db.Char(2)
-  city          String?            @db.VarChar(100)
-  browser       String?            @db.VarChar(100)
-  operatingSystem String?          @map("operating_system") @db.VarChar(100)
-  deviceType    String?            @map("device_type") @db.VarChar(50)
-  requestId     String?            @map("request_id") @db.VarChar(50)
-  correlationId String?            @map("correlation_id") @db.VarChar(50)
-  geo           Json?
-  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt     DateTime?          @map("deleted_at") @db.Timestamptz(6)
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String?            @map("tenant_id") @db.Uuid
+  userId          String?            @map("user_id") @db.Uuid
+  email           String?            @db.VarChar(255)
+  result          LoginAttemptResult
+  failureReason   String?            @map("failure_reason") @db.VarChar(100)
+  ipAddress       String?            @map("ip_address") @db.VarChar(45)
+  userAgent       String?            @map("user_agent") @db.Text
+  countryCode     String?            @map("country_code") @db.Char(2)
+  city            String?            @db.VarChar(100)
+  browser         String?            @db.VarChar(100)
+  operatingSystem String?            @map("operating_system") @db.VarChar(100)
+  deviceType      String?            @map("device_type") @db.VarChar(50)
+  requestId       String?            @map("request_id") @db.VarChar(50)
+  correlationId   String?            @map("correlation_id") @db.VarChar(50)
+  geo             Json?
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -134,24 +134,24 @@ model LoginAttempt {
 }
 
 model FailedLoginHistory {
-  id            String   @id @default(uuid()) @db.Uuid
-  tenantId      String?  @map("tenant_id") @db.Uuid
-  userId        String?  @map("user_id") @db.Uuid
-  email         String?  @db.VarChar(255)
-  failureReason String   @map("failure_reason") @db.VarChar(100)
-  ipAddress     String?  @map("ip_address") @db.VarChar(45)
-  userAgent     String?  @map("user_agent") @db.Text
-  countryCode   String?  @map("country_code") @db.Char(2)
-  city          String?  @db.VarChar(100)
-  browser       String?  @db.VarChar(100)
-  operatingSystem String? @map("operating_system") @db.VarChar(100)
-  deviceType    String?  @map("device_type") @db.VarChar(50)
-  requestId     String?  @map("request_id") @db.VarChar(50)
-  correlationId String?  @map("correlation_id") @db.VarChar(50)
-  geo           Json?
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String?   @map("tenant_id") @db.Uuid
+  userId          String?   @map("user_id") @db.Uuid
+  email           String?   @db.VarChar(255)
+  failureReason   String    @map("failure_reason") @db.VarChar(100)
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+  countryCode     String?   @map("country_code") @db.Char(2)
+  city            String?   @db.VarChar(100)
+  browser         String?   @db.VarChar(100)
+  operatingSystem String?   @map("operating_system") @db.VarChar(100)
+  deviceType      String?   @map("device_type") @db.VarChar(50)
+  requestId       String?   @map("request_id") @db.VarChar(50)
+  correlationId   String?   @map("correlation_id") @db.VarChar(50)
+  geo             Json?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -185,11 +185,11 @@ model AccountLock {
 }
 
 model PasswordHistory {
-  id           String   @id @default(uuid()) @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -200,17 +200,17 @@ model PasswordHistory {
 }
 
 model RememberedDevice {
-  id             String    @id @default(uuid()) @db.Uuid
-  userId         String    @map("user_id") @db.Uuid
-  deviceTokenHash String   @map("device_token_hash") @db.VarChar(255)
-  name           String?   @db.VarChar(100)
-  ipAddress      String?   @map("ip_address") @db.VarChar(45)
-  userAgent      String?   @map("user_agent") @db.Text
-  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
-  lastUsedAt     DateTime? @map("last_used_at") @db.Timestamptz(6)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  deviceTokenHash String    @map("device_token_hash") @db.VarChar(255)
+  name            String?   @db.VarChar(100)
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+  expiresAt       DateTime  @map("expires_at") @db.Timestamptz(6)
+  lastUsedAt      DateTime? @map("last_used_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -218,4 +218,27 @@ model RememberedDevice {
   @@index([deviceTokenHash])
   @@index([expiresAt])
   @@map("remembered_devices")
+}
+
+model RevokedRefreshToken {
+  id        String                    @id @default(uuid()) @db.Uuid
+  sessionId String                    @map("session_id") @db.Uuid
+  tokenHash String                    @unique @map("token_hash") @db.VarChar(255)
+  reason    RevokedRefreshTokenReason
+  revokedAt DateTime                  @default(now()) @map("revoked_at") @db.Timestamptz(6)
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([revokedAt])
+  @@map("revoked_refresh_tokens")
+}
+
+model RateLimitEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  bucketKey String   @map("bucket_key") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([bucketKey, createdAt])
+  @@map("rate_limit_events")
 }

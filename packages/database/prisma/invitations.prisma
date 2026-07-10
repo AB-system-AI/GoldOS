@@ -29,13 +29,13 @@ model EmployeeInvitation {
   updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz(6)
 
-  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch      Branch?             @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  role        Role?               @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  createdBy   User                @relation("InvitationCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
-  acceptedBy  User?               @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
-  cancelledBy User?               @relation("InvitationCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
-  employee    Employee?           @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch      Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  role        Role?                @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  createdBy   User                 @relation("InvitationCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  acceptedBy  User?                @relation("InvitationAcceptedBy", fields: [acceptedById], references: [id], onDelete: SetNull)
+  cancelledBy User?                @relation("InvitationCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  employee    Employee?            @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   tokens      InvitationToken[]
   auditLogs   InvitationAuditLog[]
 

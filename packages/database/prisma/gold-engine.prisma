@@ -27,25 +27,25 @@ model GoldPriceProvider {
 }
 
 model GoldPriceSource {
-  id         String               @id @default(uuid()) @db.Uuid
-  tenantId   String               @map("tenant_id") @db.Uuid
-  providerId String               @map("provider_id") @db.Uuid
-  name       String               @db.VarChar(100)
-  priority   Int                  @default(0)
-  isPrimary  Boolean              @default(false) @map("is_primary")
-  isActive   Boolean              @default(true) @map("is_active")
-  credentials Json                @default("{}")
-  settings   Json                 @default("{}")
-  createdAt  DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt  DateTime?            @map("deleted_at") @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  providerId  String    @map("provider_id") @db.Uuid
+  name        String    @db.VarChar(100)
+  priority    Int       @default(0)
+  isPrimary   Boolean   @default(false) @map("is_primary")
+  isActive    Boolean   @default(true) @map("is_active")
+  credentials Json      @default("{}")
+  settings    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  provider   GoldPriceProvider @relation(fields: [providerId], references: [id], onDelete: Restrict)
-  syncLogs   GoldPriceSyncLog[]
-  cache      GoldPriceCache[]
-  overrides  GoldPriceOverride[]
-  histories  GoldPriceHistory[]
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider  GoldPriceProvider   @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  syncLogs  GoldPriceSyncLog[]
+  cache     GoldPriceCache[]
+  overrides GoldPriceOverride[]
+  histories GoldPriceHistory[]
 
   @@unique([tenantId, providerId])
   @@index([tenantId])
@@ -55,20 +55,20 @@ model GoldPriceSource {
 }
 
 model GoldPriceSyncLog {
-  id           String          @id @default(uuid()) @db.Uuid
-  tenantId     String?         @map("tenant_id") @db.Uuid
-  providerId   String          @map("provider_id") @db.Uuid
-  sourceId     String?         @map("source_id") @db.Uuid
-  status       PriceSyncStatus @default(PENDING)
-  recordsSynced Int            @default(0) @map("records_synced")
-  errorMessage String?         @map("error_message") @db.Text
-  errorDetails Json?           @map("error_details")
-  startedAt    DateTime        @default(now()) @map("started_at") @db.Timestamptz(6)
-  completedAt  DateTime?       @map("completed_at") @db.Timestamptz(6)
-  durationMs   Int?            @map("duration_ms")
-  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  id            String          @id @default(uuid()) @db.Uuid
+  tenantId      String?         @map("tenant_id") @db.Uuid
+  providerId    String          @map("provider_id") @db.Uuid
+  sourceId      String?         @map("source_id") @db.Uuid
+  status        PriceSyncStatus @default(PENDING)
+  recordsSynced Int             @default(0) @map("records_synced")
+  errorMessage  String?         @map("error_message") @db.Text
+  errorDetails  Json?           @map("error_details")
+  startedAt     DateTime        @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt   DateTime?       @map("completed_at") @db.Timestamptz(6)
+  durationMs    Int?            @map("duration_ms")
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?       @map("deleted_at") @db.Timestamptz(6)
 
   tenant   Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   provider GoldPriceProvider @relation(fields: [providerId], references: [id], onDelete: Restrict)
@@ -106,22 +106,22 @@ model GoldPriceCache {
 }
 
 model GoldPriceOverride {
-  id           String                @id @default(uuid()) @db.Uuid
-  tenantId     String                @map("tenant_id") @db.Uuid
-  sourceId     String?               @map("source_id") @db.Uuid
-  karat        GoldKarat
-  overrideType GoldPriceOverrideType @default(MANUAL) @map("override_type")
-  pricePerGram Decimal?              @map("price_per_gram") @db.Decimal(12, 4)
-  spreadBps    Int?                  @map("spread_bps")
-  currency     String                @default("SAR") @db.Char(3)
-  reason       String?               @db.Text
-  effectiveFrom DateTime             @map("effective_from") @db.Timestamptz(6)
-  effectiveTo   DateTime?            @map("effective_to") @db.Timestamptz(6)
-  isActive     Boolean               @default(true) @map("is_active")
-  createdById  String?               @map("created_by_id") @db.Uuid
-  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?             @map("deleted_at") @db.Timestamptz(6)
+  id            String                @id @default(uuid()) @db.Uuid
+  tenantId      String                @map("tenant_id") @db.Uuid
+  sourceId      String?               @map("source_id") @db.Uuid
+  karat         GoldKarat
+  overrideType  GoldPriceOverrideType @default(MANUAL) @map("override_type")
+  pricePerGram  Decimal?              @map("price_per_gram") @db.Decimal(12, 4)
+  spreadBps     Int?                  @map("spread_bps")
+  currency      String                @default("SAR") @db.Char(3)
+  reason        String?               @db.Text
+  effectiveFrom DateTime              @map("effective_from") @db.Timestamptz(6)
+  effectiveTo   DateTime?             @map("effective_to") @db.Timestamptz(6)
+  isActive      Boolean               @default(true) @map("is_active")
+  createdById   String?               @map("created_by_id") @db.Uuid
+  createdAt     DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?             @map("deleted_at") @db.Timestamptz(6)
 
   tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   source    GoldPriceSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)

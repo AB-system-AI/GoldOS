@@ -1,22 +1,22 @@
 // ─── Manufacturing & Repairs ─────────────────────────────────────────────────
 
 model ManufacturingOrder {
-  id          String                   @id @default(uuid()) @db.Uuid
-  tenantId    String                   @map("tenant_id") @db.Uuid
-  branchId    String                   @map("branch_id") @db.Uuid
-  workshopId  String?                  @map("workshop_id") @db.Uuid
-  orderNo     String                   @map("order_no") @db.VarChar(30)
-  status      ManufacturingOrderStatus @default(DRAFT)
-  description String                   @db.Text
-  targetWeight Decimal?                @map("target_weight") @db.Decimal(12, 4)
-  targetKarat GoldKarat?               @map("target_karat")
-  dueDate     DateTime?                @map("due_date") @db.Date
-  completedAt DateTime?                @map("completed_at") @db.Timestamptz(6)
-  notes       String?                  @db.Text
-  metadata    Json                     @default("{}")
-  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?                @map("deleted_at") @db.Timestamptz(6)
+  id           String                   @id @default(uuid()) @db.Uuid
+  tenantId     String                   @map("tenant_id") @db.Uuid
+  branchId     String                   @map("branch_id") @db.Uuid
+  workshopId   String?                  @map("workshop_id") @db.Uuid
+  orderNo      String                   @map("order_no") @db.VarChar(30)
+  status       ManufacturingOrderStatus @default(DRAFT)
+  description  String                   @db.Text
+  targetWeight Decimal?                 @map("target_weight") @db.Decimal(12, 4)
+  targetKarat  GoldKarat?               @map("target_karat")
+  dueDate      DateTime?                @map("due_date") @db.Date
+  completedAt  DateTime?                @map("completed_at") @db.Timestamptz(6)
+  notes        String?                  @db.Text
+  metadata     Json                     @default("{}")
+  createdAt    DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?                @map("deleted_at") @db.Timestamptz(6)
 
   tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Restrict)
@@ -30,24 +30,24 @@ model ManufacturingOrder {
 }
 
 model RepairOrder {
-  id           String            @id @default(uuid()) @db.Uuid
-  tenantId     String            @map("tenant_id") @db.Uuid
-  branchId     String            @map("branch_id") @db.Uuid
-  workshopId   String?           @map("workshop_id") @db.Uuid
-  customerId   String?           @map("customer_id") @db.Uuid
-  orderNo      String            @map("order_no") @db.VarChar(30)
-  status       RepairOrderStatus @default(DRAFT)
-  description  String            @db.Text
-  estimatedCost Decimal?         @map("estimated_cost") @db.Decimal(18, 4)
-  actualCost   Decimal?          @map("actual_cost") @db.Decimal(18, 4)
-  receivedAt   DateTime?         @map("received_at") @db.Timestamptz(6)
-  completedAt  DateTime?         @map("completed_at") @db.Timestamptz(6)
-  deliveredAt  DateTime?         @map("delivered_at") @db.Timestamptz(6)
-  notes        String?           @db.Text
-  metadata     Json              @default("{}")
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  id            String            @id @default(uuid()) @db.Uuid
+  tenantId      String            @map("tenant_id") @db.Uuid
+  branchId      String            @map("branch_id") @db.Uuid
+  workshopId    String?           @map("workshop_id") @db.Uuid
+  customerId    String?           @map("customer_id") @db.Uuid
+  orderNo       String            @map("order_no") @db.VarChar(30)
+  status        RepairOrderStatus @default(DRAFT)
+  description   String            @db.Text
+  estimatedCost Decimal?          @map("estimated_cost") @db.Decimal(18, 4)
+  actualCost    Decimal?          @map("actual_cost") @db.Decimal(18, 4)
+  receivedAt    DateTime?         @map("received_at") @db.Timestamptz(6)
+  completedAt   DateTime?         @map("completed_at") @db.Timestamptz(6)
+  deliveredAt   DateTime?         @map("delivered_at") @db.Timestamptz(6)
+  notes         String?           @db.Text
+  metadata      Json              @default("{}")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?         @map("deleted_at") @db.Timestamptz(6)
 
   tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Restrict)
@@ -62,20 +62,20 @@ model RepairOrder {
 }
 
 model Certificate {
-  id                String            @id @default(uuid()) @db.Uuid
-  tenantId          String            @map("tenant_id") @db.Uuid
-  productId         String?           @map("product_id") @db.Uuid
-  certificateNo     String            @map("certificate_no") @db.VarChar(50)
-  type              CertificateType
-  status            CertificateStatus @default(ACTIVE)
-  issuer            String            @db.VarChar(100)
-  issuedAt          DateTime          @map("issued_at") @db.Date
-  expiresAt         DateTime?         @map("expires_at") @db.Date
-  fileId            String?           @map("file_id") @db.Uuid
-  metadata          Json              @default("{}")
-  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
+  id            String            @id @default(uuid()) @db.Uuid
+  tenantId      String            @map("tenant_id") @db.Uuid
+  productId     String?           @map("product_id") @db.Uuid
+  certificateNo String            @map("certificate_no") @db.VarChar(50)
+  type          CertificateType
+  status        CertificateStatus @default(ACTIVE)
+  issuer        String            @db.VarChar(100)
+  issuedAt      DateTime          @map("issued_at") @db.Date
+  expiresAt     DateTime?         @map("expires_at") @db.Date
+  fileId        String?           @map("file_id") @db.Uuid
+  metadata      Json              @default("{}")
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?         @map("deleted_at") @db.Timestamptz(6)
 
   tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)

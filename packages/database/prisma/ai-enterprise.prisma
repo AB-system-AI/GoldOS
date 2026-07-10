@@ -1,20 +1,20 @@
 // ─── AI Engine (Enterprise Extension) ──────────────────────────────────────
 
 model AiAgent {
-  id          String        @id @default(uuid()) @db.Uuid
-  tenantId    String?       @map("tenant_id") @db.Uuid
-  code        String        @db.VarChar(50)
-  name        String        @db.VarChar(100)
-  description String?       @db.Text
-  model       String        @db.VarChar(100)
-  status      AiAgentStatus @default(ACTIVE)
-  systemPrompt String?      @map("system_prompt") @db.Text
-  tools       Json          @default("[]")
-  config      Json          @default("{}")
-  isSystem    Boolean       @default(false) @map("is_system")
-  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String?       @map("tenant_id") @db.Uuid
+  code         String        @db.VarChar(50)
+  name         String        @db.VarChar(100)
+  description  String?       @db.Text
+  model        String        @db.VarChar(100)
+  status       AiAgentStatus @default(ACTIVE)
+  systemPrompt String?       @map("system_prompt") @db.Text
+  tools        Json          @default("[]")
+  config       Json          @default("{}")
+  isSystem     Boolean       @default(false) @map("is_system")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
   tenant        Tenant?          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   prompts       AiPrompt[]
@@ -106,22 +106,22 @@ model AiAction {
 }
 
 model AiUsage {
-  id               String   @id @default(uuid()) @db.Uuid
-  tenantId         String   @map("tenant_id") @db.Uuid
-  agentId          String?  @map("agent_id") @db.Uuid
-  userId           String?  @map("user_id") @db.Uuid
-  model            String   @db.VarChar(100)
-  promptTokens     Int      @default(0) @map("prompt_tokens")
-  completionTokens Int      @default(0) @map("completion_tokens")
-  totalTokens      Int      @default(0) @map("total_tokens")
-  creditsUsed      Decimal  @default(0) @map("credits_used") @db.Decimal(12, 4)
-  cost             Decimal? @db.Decimal(12, 6)
-  currency         String?  @db.Char(3)
-  periodStart      DateTime @map("period_start") @db.Timestamptz(6)
-  periodEnd        DateTime @map("period_end") @db.Timestamptz(6)
-  metadata         Json     @default("{}")
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  agentId          String?   @map("agent_id") @db.Uuid
+  userId           String?   @map("user_id") @db.Uuid
+  model            String    @db.VarChar(100)
+  promptTokens     Int       @default(0) @map("prompt_tokens")
+  completionTokens Int       @default(0) @map("completion_tokens")
+  totalTokens      Int       @default(0) @map("total_tokens")
+  creditsUsed      Decimal   @default(0) @map("credits_used") @db.Decimal(12, 4)
+  cost             Decimal?  @db.Decimal(12, 6)
+  currency         String?   @db.Char(3)
+  periodStart      DateTime  @map("period_start") @db.Timestamptz(6)
+  periodEnd        DateTime  @map("period_end") @db.Timestamptz(6)
+  metadata         Json      @default("{}")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   tenant Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -178,21 +178,21 @@ model AiFeedback {
 }
 
 model AiJob {
-  id          String      @id @default(uuid()) @db.Uuid
-  tenantId    String      @map("tenant_id") @db.Uuid
-  agentId     String?     @map("agent_id") @db.Uuid
-  jobType     String      @map("job_type") @db.VarChar(50)
-  status      AiJobStatus @default(PENDING)
-  priority    Int         @default(0)
-  payload     Json        @default("{}")
-  result      Json?
-  errorMessage String?    @map("error_message") @db.Text
-  scheduledAt DateTime?   @map("scheduled_at") @db.Timestamptz(6)
-  startedAt   DateTime?   @map("started_at") @db.Timestamptz(6)
-  completedAt DateTime?   @map("completed_at") @db.Timestamptz(6)
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?   @map("deleted_at") @db.Timestamptz(6)
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @map("tenant_id") @db.Uuid
+  agentId      String?     @map("agent_id") @db.Uuid
+  jobType      String      @map("job_type") @db.VarChar(50)
+  status       AiJobStatus @default(PENDING)
+  priority     Int         @default(0)
+  payload      Json        @default("{}")
+  result       Json?
+  errorMessage String?     @map("error_message") @db.Text
+  scheduledAt  DateTime?   @map("scheduled_at") @db.Timestamptz(6)
+  startedAt    DateTime?   @map("started_at") @db.Timestamptz(6)
+  completedAt  DateTime?   @map("completed_at") @db.Timestamptz(6)
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?   @map("deleted_at") @db.Timestamptz(6)
 
   tenant Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agent  AiAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)

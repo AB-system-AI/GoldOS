@@ -6,6 +6,7 @@
  */
 
 const { PrismaClient } = require('@prisma/client');
+const { seedPermissions } = require('./seed-permissions.cjs');
 
 const prisma = new PrismaClient();
 
@@ -19,9 +20,9 @@ async function seedPlans() {
   // await prisma.plan.upsert({ ... });
 }
 
-async function seedPermissions() {
-  // Placeholder: global permission catalog
-  // await prisma.permission.upsert({ ... });
+async function seedPermissionsCatalog() {
+  const count = await seedPermissions(prisma);
+  console.log(`Seeded ${count} permissions.`);
 }
 
 async function seedCountries() {
@@ -56,7 +57,7 @@ async function main() {
 
   await seedReferenceData();
   await seedPlans();
-  await seedPermissions();
+  await seedPermissionsCatalog();
   await seedCountries();
   await seedSystemSettings();
   await seedEnterpriseReferenceData();

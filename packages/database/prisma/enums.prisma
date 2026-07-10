@@ -456,6 +456,11 @@ enum SessionStatus {
   REVOKED
 }
 
+enum RevokedRefreshTokenReason {
+  ROTATED
+  REUSE_DETECTED
+}
+
 enum PricingRuleType {
   GOLD_RATE
   MAKING_CHARGE

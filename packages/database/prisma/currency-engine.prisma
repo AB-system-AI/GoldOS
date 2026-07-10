@@ -27,18 +27,18 @@ model ExchangeRateProvider {
 }
 
 model ExchangeRateCache {
-  id           String   @id @default(uuid()) @db.Uuid
-  tenantId     String?  @map("tenant_id") @db.Uuid
-  providerId   String   @map("provider_id") @db.Uuid
-  currencyCode String   @map("currency_code") @db.Char(3)
-  baseCurrency String   @default("SAR") @map("base_currency") @db.Char(3)
-  rate         Decimal  @db.Decimal(18, 8)
-  fetchedAt    DateTime @map("fetched_at") @db.Timestamptz(6)
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String?   @map("tenant_id") @db.Uuid
+  providerId   String    @map("provider_id") @db.Uuid
+  currencyCode String    @map("currency_code") @db.Char(3)
+  baseCurrency String    @default("SAR") @map("base_currency") @db.Char(3)
+  rate         Decimal   @db.Decimal(18, 8)
+  fetchedAt    DateTime  @map("fetched_at") @db.Timestamptz(6)
   expiresAt    DateTime? @map("expires_at") @db.Timestamptz(6)
-  isStale      Boolean  @default(false) @map("is_stale")
-  metadata     Json     @default("{}")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  isStale      Boolean   @default(false) @map("is_stale")
+  metadata     Json      @default("{}")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   tenant   Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)

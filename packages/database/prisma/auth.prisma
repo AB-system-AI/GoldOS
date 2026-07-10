@@ -1,37 +1,37 @@
 // ─── Authentication & Authorization ──────────────────────────────────────────
 
 model User {
-  id                String     @id @default(uuid()) @db.Uuid
-  tenantId          String     @map("tenant_id") @db.Uuid
-  roleId            String     @map("role_id") @db.Uuid
-  email             String     @db.VarChar(255)
-  passwordHash      String?    @map("password_hash") @db.VarChar(255)
-  firstName         String     @map("first_name") @db.VarChar(100)
-  lastName          String     @map("last_name") @db.VarChar(100)
-  phone             String?    @db.VarChar(30)
-  status            UserStatus @default(PENDING_VERIFICATION)
-  locale            String     @default("ar") @db.VarChar(10)
-  twoFactorEnabled  Boolean    @default(false) @map("two_factor_enabled")
-  twoFactorSecret   String?    @map("two_factor_secret") @db.VarChar(255)
-  lastLoginAt       DateTime?  @map("last_login_at") @db.Timestamptz(6)
-  emailVerifiedAt   DateTime?  @map("email_verified_at") @db.Timestamptz(6)
-  metadata          Json       @default("{}")
-  createdAt         DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt         DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  id               String     @id @default(uuid()) @db.Uuid
+  tenantId         String     @map("tenant_id") @db.Uuid
+  roleId           String     @map("role_id") @db.Uuid
+  email            String     @db.VarChar(255)
+  passwordHash     String?    @map("password_hash") @db.VarChar(255)
+  firstName        String     @map("first_name") @db.VarChar(100)
+  lastName         String     @map("last_name") @db.VarChar(100)
+  phone            String?    @db.VarChar(30)
+  status           UserStatus @default(PENDING_VERIFICATION)
+  locale           String     @default("ar") @db.VarChar(10)
+  twoFactorEnabled Boolean    @default(false) @map("two_factor_enabled")
+  twoFactorSecret  String?    @map("two_factor_secret") @db.VarChar(255)
+  lastLoginAt      DateTime?  @map("last_login_at") @db.Timestamptz(6)
+  emailVerifiedAt  DateTime?  @map("email_verified_at") @db.Timestamptz(6)
+  metadata         Json       @default("{}")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?  @map("deleted_at") @db.Timestamptz(6)
 
-  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  role         Role         @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  userBranches UserBranch[]
-  sessions     Session[]
-  devices      Device[]
-  employee     Employee?
-  auditLogs    AuditLog[]
-  activityLogs ActivityLog[]
-  invitationsCreated      EmployeeInvitation[] @relation("InvitationCreatedBy")
-  invitationsAccepted     EmployeeInvitation[] @relation("InvitationAcceptedBy")
-  invitationsCancelled    EmployeeInvitation[] @relation("InvitationCancelledBy")
-  invitationAudits        InvitationAuditLog[] @relation("InvitationAuditPerformer")
+  tenant                  Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  role                    Role                     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  userBranches            UserBranch[]
+  sessions                Session[]
+  devices                 Device[]
+  employee                Employee?
+  auditLogs               AuditLog[]
+  activityLogs            ActivityLog[]
+  invitationsCreated      EmployeeInvitation[]     @relation("InvitationCreatedBy")
+  invitationsAccepted     EmployeeInvitation[]     @relation("InvitationAcceptedBy")
+  invitationsCancelled    EmployeeInvitation[]     @relation("InvitationCancelledBy")
+  invitationAudits        InvitationAuditLog[]     @relation("InvitationAuditPerformer")
   passwordResetTokens     PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   phoneVerificationTokens PhoneVerificationToken[]
@@ -39,11 +39,11 @@ model User {
   trustedDevices          TrustedDevice[]
   loginAttempts           LoginAttempt[]
   failedLoginHistory      FailedLoginHistory[]
-  accountLocks            AccountLock[] @relation("AccountLockUser")
-  accountLocksAdmin       AccountLock[] @relation("AccountLockAdmin")
+  accountLocks            AccountLock[]            @relation("AccountLockUser")
+  accountLocksAdmin       AccountLock[]            @relation("AccountLockAdmin")
   passwordHistory         PasswordHistory[]
   rememberedDevices       RememberedDevice[]
-  goldPriceOverrides      GoldPriceOverride[] @relation("GoldPriceOverrideCreator")
+  goldPriceOverrides      GoldPriceOverride[]      @relation("GoldPriceOverrideCreator")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -54,17 +54,17 @@ model User {
 }
 
 model Role {
-  id          String   @id @default(uuid()) @db.Uuid
-  tenantId    String   @map("tenant_id") @db.Uuid
-  code        String   @db.VarChar(50)
-  name        String   @db.VarChar(100)
-  description String?  @db.Text
-  isSystem    Boolean  @default(false) @map("is_system")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+  isSystem    Boolean   @default(false) @map("is_system")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   users           User[]
   rolePermissions RolePermission[]
   invitations     EmployeeInvitation[]
@@ -76,13 +76,13 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid()) @db.Uuid
-  code        String   @unique @db.VarChar(100)
-  name        String   @db.VarChar(150)
-  module      String   @db.VarChar(50)
-  description String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  code        String    @unique @db.VarChar(100)
+  name        String    @db.VarChar(150)
+  module      String    @db.VarChar(50)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   rolePermissions RolePermission[]
@@ -93,11 +93,11 @@ model Permission {
 }
 
 model RolePermission {
-  id           String   @id @default(uuid()) @db.Uuid
-  roleId       String   @map("role_id") @db.Uuid
-  permissionId String   @map("permission_id") @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String    @id @default(uuid()) @db.Uuid
+  roleId       String    @map("role_id") @db.Uuid
+  permissionId String    @map("permission_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -110,12 +110,12 @@ model RolePermission {
 }
 
 model UserBranch {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  branchId  String   @map("branch_id") @db.Uuid
-  isDefault Boolean  @default(false) @map("is_default")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  branchId  String    @map("branch_id") @db.Uuid
+  isDefault Boolean   @default(false) @map("is_default")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -128,45 +128,51 @@ model UserBranch {
 }
 
 model Session {
-  id           String        @id @default(uuid()) @db.Uuid
-  tenantId     String        @map("tenant_id") @db.Uuid
-  userId       String        @map("user_id") @db.Uuid
-  deviceId     String?       @map("device_id") @db.Uuid
-  tokenHash    String        @map("token_hash") @db.VarChar(255)
-  status       SessionStatus @default(ACTIVE)
-  ipAddress    String?       @map("ip_address") @db.VarChar(45)
-  userAgent    String?       @map("user_agent") @db.Text
-  expiresAt    DateTime      @map("expires_at") @db.Timestamptz(6)
-  lastActiveAt DateTime?     @map("last_active_at") @db.Timestamptz(6)
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id               String        @id @default(uuid()) @db.Uuid
+  tenantId         String        @map("tenant_id") @db.Uuid
+  userId           String        @map("user_id") @db.Uuid
+  deviceId         String?       @map("device_id") @db.Uuid
+  tokenHash        String        @map("token_hash") @db.VarChar(255)
+  tokenFamilyId    String        @default(uuid()) @map("token_family_id") @db.Uuid
+  status           SessionStatus @default(ACTIVE)
+  pendingTwoFactor Boolean       @default(false) @map("pending_two_factor")
+  ipAddress        String?       @map("ip_address") @db.VarChar(45)
+  userAgent        String?       @map("user_agent") @db.Text
+  expiresAt        DateTime      @map("expires_at") @db.Timestamptz(6)
+  lastActiveAt     DateTime?     @map("last_active_at") @db.Timestamptz(6)
+  rotatedAt        DateTime?     @map("rotated_at") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device        Device?               @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  revokedTokens RevokedRefreshToken[]
 
   @@index([tenantId])
   @@index([userId])
   @@index([tokenHash])
+  @@index([tokenFamilyId])
+  @@index([userId, status])
   @@index([status])
   @@index([expiresAt])
   @@map("sessions")
 }
 
 model ApiKey {
-  id          String       @id @default(uuid()) @db.Uuid
-  tenantId    String       @map("tenant_id") @db.Uuid
-  name        String       @db.VarChar(100)
-  keyPrefix   String       @map("key_prefix") @db.VarChar(20)
-  keyHash     String       @map("key_hash") @db.VarChar(255)
-  status      ApiKeyStatus @default(ACTIVE)
-  scopes      Json         @default("[]")
-  expiresAt   DateTime?    @map("expires_at") @db.Timestamptz(6)
-  lastUsedAt  DateTime?    @map("last_used_at") @db.Timestamptz(6)
-  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  id         String       @id @default(uuid()) @db.Uuid
+  tenantId   String       @map("tenant_id") @db.Uuid
+  name       String       @db.VarChar(100)
+  keyPrefix  String       @map("key_prefix") @db.VarChar(20)
+  keyHash    String       @map("key_hash") @db.VarChar(255)
+  status     ApiKeyStatus @default(ACTIVE)
+  scopes     Json         @default("[]")
+  expiresAt  DateTime?    @map("expires_at") @db.Timestamptz(6)
+  lastUsedAt DateTime?    @map("last_used_at") @db.Timestamptz(6)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?    @map("deleted_at") @db.Timestamptz(6)
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -178,23 +184,23 @@ model ApiKey {
 }
 
 model Device {
-  id           String     @id @default(uuid()) @db.Uuid
-  tenantId     String     @map("tenant_id") @db.Uuid
-  userId       String?    @map("user_id") @db.Uuid
-  branchId     String?    @map("branch_id") @db.Uuid
-  name         String     @db.VarChar(100)
-  type         DeviceType @default(OTHER)
-  identifier   String     @db.VarChar(255)
-  isTrusted    Boolean    @default(false) @map("is_trusted")
-  lastSeenAt   DateTime?  @map("last_seen_at") @db.Timestamptz(6)
-  metadata     Json       @default("{}")
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  id         String     @id @default(uuid()) @db.Uuid
+  tenantId   String     @map("tenant_id") @db.Uuid
+  userId     String?    @map("user_id") @db.Uuid
+  branchId   String?    @map("branch_id") @db.Uuid
+  name       String     @db.VarChar(100)
+  type       DeviceType @default(OTHER)
+  identifier String     @db.VarChar(255)
+  isTrusted  Boolean    @default(false) @map("is_trusted")
+  lastSeenAt DateTime?  @map("last_seen_at") @db.Timestamptz(6)
+  metadata   Json       @default("{}")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?  @map("deleted_at") @db.Timestamptz(6)
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  branch   Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user           User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  branch         Branch?         @relation(fields: [branchId], references: [id], onDelete: SetNull)
   sessions       Session[]
   trustedDevices TrustedDevice[]
 

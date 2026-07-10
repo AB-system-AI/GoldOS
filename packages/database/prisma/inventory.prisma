@@ -1,23 +1,23 @@
 // ─── Inventory Management ────────────────────────────────────────────────────
 
 model InventoryItem {
-  id                String          @id @default(uuid()) @db.Uuid
-  tenantId          String          @map("tenant_id") @db.Uuid
-  branchId          String          @map("branch_id") @db.Uuid
-  productId         String          @map("product_id") @db.Uuid
-  inventoryLotId    String?         @map("inventory_lot_id") @db.Uuid
-  serialNumber      String          @map("serial_number") @db.VarChar(50)
-  barcode           String?         @db.VarChar(50)
-  status            InventoryStatus @default(AVAILABLE)
-  costPrice         Decimal?        @map("cost_price") @db.Decimal(18, 4)
-  sellingPrice      Decimal?        @map("selling_price") @db.Decimal(18, 4)
-  goldRateAtPurchase Decimal?       @map("gold_rate_at_purchase") @db.Decimal(12, 4)
-  weightActual      Decimal?        @map("weight_actual") @db.Decimal(12, 4)
-  location          String?         @db.VarChar(100)
-  metadata          Json            @default("{}")
-  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt         DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  id                 String          @id @default(uuid()) @db.Uuid
+  tenantId           String          @map("tenant_id") @db.Uuid
+  branchId           String          @map("branch_id") @db.Uuid
+  productId          String          @map("product_id") @db.Uuid
+  inventoryLotId     String?         @map("inventory_lot_id") @db.Uuid
+  serialNumber       String          @map("serial_number") @db.VarChar(50)
+  barcode            String?         @db.VarChar(50)
+  status             InventoryStatus @default(AVAILABLE)
+  costPrice          Decimal?        @map("cost_price") @db.Decimal(18, 4)
+  sellingPrice       Decimal?        @map("selling_price") @db.Decimal(18, 4)
+  goldRateAtPurchase Decimal?        @map("gold_rate_at_purchase") @db.Decimal(12, 4)
+  weightActual       Decimal?        @map("weight_actual") @db.Decimal(12, 4)
+  location           String?         @db.VarChar(100)
+  metadata           Json            @default("{}")
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt          DateTime?       @map("deleted_at") @db.Timestamptz(6)
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Restrict)
@@ -39,19 +39,19 @@ model InventoryItem {
 }
 
 model InventoryLot {
-  id           String    @id @default(uuid()) @db.Uuid
-  tenantId     String    @map("tenant_id") @db.Uuid
-  lotNumber    String    @map("lot_number") @db.VarChar(50)
-  receivedAt   DateTime  @map("received_at") @db.Timestamptz(6)
-  expiryAt     DateTime? @map("expiry_at") @db.Timestamptz(6)
-  supplierRef  String?   @map("supplier_ref") @db.VarChar(100)
-  totalWeight  Decimal?  @map("total_weight") @db.Decimal(12, 4)
-  totalPieces  Int       @default(0) @map("total_pieces")
-  notes        String?   @db.Text
-  metadata     Json      @default("{}")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  lotNumber   String    @map("lot_number") @db.VarChar(50)
+  receivedAt  DateTime  @map("received_at") @db.Timestamptz(6)
+  expiryAt    DateTime? @map("expiry_at") @db.Timestamptz(6)
+  supplierRef String?   @map("supplier_ref") @db.VarChar(100)
+  totalWeight Decimal?  @map("total_weight") @db.Decimal(12, 4)
+  totalPieces Int       @default(0) @map("total_pieces")
+  notes       String?   @db.Text
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   inventoryItems InventoryItem[]

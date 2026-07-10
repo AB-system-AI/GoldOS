@@ -49,23 +49,23 @@ model PrinterProfile {
 }
 
 model PrintJob {
-  id          String         @id @default(uuid()) @db.Uuid
-  tenantId    String         @map("tenant_id") @db.Uuid
-  printerId   String?        @map("printer_id") @db.Uuid
-  profileId   String?        @map("profile_id") @db.Uuid
-  templateId  String?        @map("template_id") @db.Uuid
-  userId      String?        @map("user_id") @db.Uuid
-  entityType  String?        @map("entity_type") @db.VarChar(50)
-  entityId    String?        @map("entity_id") @db.Uuid
-  status      PrintJobStatus @default(QUEUED)
-  copies      Int            @default(1)
-  payload     Json           @default("{}")
-  errorMessage String?       @map("error_message") @db.Text
-  queuedAt    DateTime       @default(now()) @map("queued_at") @db.Timestamptz(6)
-  printedAt   DateTime?      @map("printed_at") @db.Timestamptz(6)
-  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  id           String         @id @default(uuid()) @db.Uuid
+  tenantId     String         @map("tenant_id") @db.Uuid
+  printerId    String?        @map("printer_id") @db.Uuid
+  profileId    String?        @map("profile_id") @db.Uuid
+  templateId   String?        @map("template_id") @db.Uuid
+  userId       String?        @map("user_id") @db.Uuid
+  entityType   String?        @map("entity_type") @db.VarChar(50)
+  entityId     String?        @map("entity_id") @db.Uuid
+  status       PrintJobStatus @default(QUEUED)
+  copies       Int            @default(1)
+  payload      Json           @default("{}")
+  errorMessage String?        @map("error_message") @db.Text
+  queuedAt     DateTime       @default(now()) @map("queued_at") @db.Timestamptz(6)
+  printedAt    DateTime?      @map("printed_at") @db.Timestamptz(6)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
   tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   printer  ThermalPrinter? @relation(fields: [printerId], references: [id], onDelete: SetNull)
