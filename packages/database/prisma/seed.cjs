@@ -39,6 +39,18 @@ async function seedDemoTenant() {
   // Disabled in production — implement in development seed profile only
 }
 
+async function seedEnterpriseReferenceData() {
+  // Placeholder: gold price providers, exchange rate providers, feature flags
+  // await prisma.goldPriceProvider.upsert({ ... });
+  // await prisma.exchangeRateProvider.upsert({ ... });
+  // await prisma.featureFlag.upsert({ ... });
+}
+
+async function seedAiAgents() {
+  // Placeholder: system AI agents and default prompts
+  // await prisma.aiAgent.upsert({ ... });
+}
+
 async function main() {
   console.log('GoldOS seed: placeholder mode (no data written).');
 
@@ -47,6 +59,8 @@ async function main() {
   await seedPermissions();
   await seedCountries();
   await seedSystemSettings();
+  await seedEnterpriseReferenceData();
+  await seedAiAgents();
   await seedDemoTenant();
 
   console.log('Seed placeholders complete.');

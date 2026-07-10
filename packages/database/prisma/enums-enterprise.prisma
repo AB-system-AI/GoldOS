@@ -1,0 +1,161 @@
+// ─── Enterprise Enums (Phase 2 Extension) ───────────────────────────────────
+
+enum InvitationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+enum InvitationSource {
+  EMAIL
+  SMS
+  WHATSAPP
+  MANUAL
+}
+
+enum InvitationAuditAction {
+  CREATED
+  SENT
+  RESENT
+  ACCEPTED
+  CANCELLED
+  EXPIRED
+  FAILED
+  TOKEN_USED
+}
+
+enum VerificationTokenStatus {
+  PENDING
+  VERIFIED
+  EXPIRED
+  REVOKED
+}
+
+enum LoginAttemptResult {
+  SUCCESS
+  FAILED
+  BLOCKED
+}
+
+enum AccountLockReason {
+  FAILED_ATTEMPTS
+  ADMIN
+  SECURITY
+  SUBSCRIPTION
+}
+
+enum ProviderHealthStatus {
+  HEALTHY
+  DEGRADED
+  UNHEALTHY
+  OFFLINE
+}
+
+enum PriceSyncStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum AiAgentStatus {
+  ACTIVE
+  INACTIVE
+  DEPRECATED
+}
+
+enum AiJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum AiActionType {
+  TOOL_CALL
+  QUERY
+  UPDATE
+  CREATE
+  DELETE
+  ANALYSIS
+}
+
+enum AiFeedbackRating {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum SearchIndexStatus {
+  ACTIVE
+  STALE
+  REINDEXING
+}
+
+enum BarcodeScanResult {
+  FOUND
+  NOT_FOUND
+  ERROR
+  DUPLICATE
+}
+
+enum PrintJobStatus {
+  QUEUED
+  PRINTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum FeatureFlagScope {
+  GLOBAL
+  TENANT
+  PLAN
+}
+
+enum TimelineEventType {
+  COMMENT
+  STATUS_CHANGE
+  ASSIGNMENT
+  SYSTEM
+  ATTACHMENT
+  MENTION
+}
+
+enum RestoreJobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DeletedRecordStatus {
+  DELETED
+  RESTORING
+  RESTORED
+  PURGED
+}
+
+enum UsageMetricType {
+  STORAGE
+  EMPLOYEES
+  BRANCHES
+  API
+  AI_CREDITS
+  WHATSAPP
+  SMS
+  PUSH
+}
+
+enum GoldPriceOverrideType {
+  MANUAL
+  FORMULA
+  SPREAD
+}

@@ -1,0 +1,101 @@
+// ─── Printing ────────────────────────────────────────────────────────────────
+
+model ThermalPrinter {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  branchId     String?   @map("branch_id") @db.Uuid
+  name         String    @db.VarChar(100)
+  model        String?   @db.VarChar(100)
+  connection   String    @db.VarChar(50)
+  address      String?   @db.VarChar(255)
+  isDefault    Boolean   @default(false) @map("is_default")
+  isActive     Boolean   @default(true) @map("is_active")
+  paperWidthMm Int       @default(80) @map("paper_width_mm")
+  metadata     Json      @default("{}")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  profiles PrinterProfile[]
+  jobs     PrintJob[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("thermal_printers")
+}
+
+model PrinterProfile {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  printerId String    @map("printer_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  settings  Json      @default("{}")
+  isDefault Boolean   @default(false) @map("is_default")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant  Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  printer ThermalPrinter @relation(fields: [printerId], references: [id], onDelete: Cascade)
+  jobs    PrintJob[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([printerId])
+  @@map("printer_profiles")
+}
+
+model PrintJob {
+  id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @map("tenant_id") @db.Uuid
+  printerId   String?        @map("printer_id") @db.Uuid
+  profileId   String?        @map("profile_id") @db.Uuid
+  templateId  String?        @map("template_id") @db.Uuid
+  userId      String?        @map("user_id") @db.Uuid
+  entityType  String?        @map("entity_type") @db.VarChar(50)
+  entityId    String?        @map("entity_id") @db.Uuid
+  status      PrintJobStatus @default(QUEUED)
+  copies      Int            @default(1)
+  payload     Json           @default("{}")
+  errorMessage String?       @map("error_message") @db.Text
+  queuedAt    DateTime       @default(now()) @map("queued_at") @db.Timestamptz(6)
+  printedAt   DateTime?      @map("printed_at") @db.Timestamptz(6)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  printer  ThermalPrinter? @relation(fields: [printerId], references: [id], onDelete: SetNull)
+  profile  PrinterProfile? @relation(fields: [profileId], references: [id], onDelete: SetNull)
+  template PrintTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([queuedAt])
+  @@map("print_jobs")
+}
+
+model PrintTemplate {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  code       String    @db.VarChar(50)
+  name       String    @db.VarChar(100)
+  entityType String?   @map("entity_type") @db.VarChar(50)
+  format     String    @default("THERMAL") @db.VarChar(30)
+  template   Json      @default("{}")
+  isDefault  Boolean   @default(false) @map("is_default")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  jobs   PrintJob[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("print_templates")
+}

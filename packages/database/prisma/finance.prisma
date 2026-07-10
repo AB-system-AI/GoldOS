@@ -25,15 +25,18 @@ model ExchangeRate {
   rate         Decimal  @db.Decimal(18, 8)
   effectiveAt  DateTime @map("effective_at") @db.Timestamptz(6)
   source       String?  @db.VarChar(50)
+  providerId   String?  @map("provider_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  currency Currency @relation(fields: [currencyId], references: [id], onDelete: Restrict)
+  tenant   Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  currency Currency             @relation(fields: [currencyId], references: [id], onDelete: Restrict)
+  provider ExchangeRateProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([currencyId])
+  @@index([providerId])
   @@index([effectiveAt])
   @@map("exchange_rates")
 }
@@ -45,15 +48,21 @@ model GoldPriceHistory {
   pricePerGram Decimal  @map("price_per_gram") @db.Decimal(12, 4)
   currency    String    @default("SAR") @db.Char(3)
   source      String    @db.VarChar(50)
+  providerId  String?   @map("provider_id") @db.Uuid
+  sourceId    String?   @map("source_id") @db.Uuid
   effectiveAt DateTime  @map("effective_at") @db.Timestamptz(6)
   isCurrent   Boolean   @default(false) @map("is_current")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider    GoldPriceProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  priceSource GoldPriceSource?   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, karat, isCurrent])
+  @@index([providerId])
+  @@index([sourceId])
   @@index([effectiveAt])
   @@map("gold_price_history")
 }

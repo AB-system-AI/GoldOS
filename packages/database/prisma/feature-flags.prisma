@@ -1,0 +1,59 @@
+// ─── Feature Flags & Module Configuration ────────────────────────────────────
+
+model FeatureFlag {
+  id          String           @id @default(uuid()) @db.Uuid
+  code        String           @unique @db.VarChar(100)
+  name        String           @db.VarChar(150)
+  description String?          @db.Text
+  scope       FeatureFlagScope @default(GLOBAL)
+  defaultValue Boolean         @default(false) @map("default_value")
+  metadata    Json             @default("{}")
+  isActive    Boolean          @default(true) @map("is_active")
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenantFeatures TenantFeature[]
+
+  @@index([isActive])
+  @@map("feature_flags")
+}
+
+model TenantFeature {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  flagId    String    @map("flag_id") @db.Uuid
+  enabled   Boolean   @default(false)
+  value     Json?
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  flag   FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, flagId])
+  @@index([tenantId])
+  @@index([flagId])
+  @@map("tenant_features")
+}
+
+model ModuleConfiguration {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  module    String   @db.VarChar(50)
+  key       String   @db.VarChar(100)
+  value     Json
+  isEnabled Boolean  @default(true) @map("is_enabled")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, module, key])
+  @@index([tenantId])
+  @@index([module])
+  @@map("module_configuration")
+}

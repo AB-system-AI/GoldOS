@@ -33,6 +33,9 @@ model Branch {
   cashRegisters     CashRegister[]
   manufacturingOrders ManufacturingOrder[]
   repairOrders      RepairOrder[]
+  barcodeScans      BarcodeScan[]
+  thermalPrinters   ThermalPrinter[]
+  employeeInvitations EmployeeInvitation[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -62,7 +65,8 @@ model Employee {
 
   tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
+  invitations EmployeeInvitation[]
 
   @@unique([tenantId, employeeNo])
   @@index([tenantId])

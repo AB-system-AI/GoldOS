@@ -1,0 +1,77 @@
+// ─── Currency / Exchange Rate Engine ─────────────────────────────────────────
+
+model ExchangeRateProvider {
+  id              String               @id @default(uuid()) @db.Uuid
+  code            String               @unique @db.VarChar(50)
+  name            String               @db.VarChar(100)
+  baseUrl         String?              @map("base_url") @db.VarChar(500)
+  apiKeyRequired  Boolean              @default(false) @map("api_key_required")
+  priority        Int                  @default(0)
+  healthStatus    ProviderHealthStatus @default(HEALTHY) @map("health_status")
+  lastHealthCheck DateTime?            @map("last_health_check") @db.Timestamptz(6)
+  failureCount    Int                  @default(0) @map("failure_count")
+  isActive        Boolean              @default(true) @map("is_active")
+  config          Json                 @default("{}")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?            @map("deleted_at") @db.Timestamptz(6)
+
+  cache    ExchangeRateCache[]
+  syncLogs ExchangeSyncLog[]
+  rates    ExchangeRate[]
+
+  @@index([isActive])
+  @@index([priority])
+  @@index([healthStatus])
+  @@map("exchange_rate_providers")
+}
+
+model ExchangeRateCache {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String?  @map("tenant_id") @db.Uuid
+  providerId   String   @map("provider_id") @db.Uuid
+  currencyCode String   @map("currency_code") @db.Char(3)
+  baseCurrency String   @default("SAR") @map("base_currency") @db.Char(3)
+  rate         Decimal  @db.Decimal(18, 8)
+  fetchedAt    DateTime @map("fetched_at") @db.Timestamptz(6)
+  expiresAt    DateTime? @map("expires_at") @db.Timestamptz(6)
+  isStale      Boolean  @default(false) @map("is_stale")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider ExchangeRateProvider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+
+  @@unique([tenantId, providerId, currencyCode, baseCurrency])
+  @@index([tenantId])
+  @@index([providerId])
+  @@index([fetchedAt])
+  @@map("exchange_rate_cache")
+}
+
+model ExchangeSyncLog {
+  id            String          @id @default(uuid()) @db.Uuid
+  tenantId      String?         @map("tenant_id") @db.Uuid
+  providerId    String          @map("provider_id") @db.Uuid
+  status        PriceSyncStatus @default(PENDING)
+  recordsSynced Int             @default(0) @map("records_synced")
+  errorMessage  String?         @map("error_message") @db.Text
+  errorDetails  Json?           @map("error_details")
+  startedAt     DateTime        @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt   DateTime?       @map("completed_at") @db.Timestamptz(6)
+  durationMs    Int?            @map("duration_ms")
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?       @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider ExchangeRateProvider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([providerId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("exchange_sync_logs")
+}

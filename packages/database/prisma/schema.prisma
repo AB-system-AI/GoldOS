@@ -1,6 +1,5 @@
-// GoldOS — Production Database Schema (Phase 2)
+// GoldOS — Production Database Schema (Phase 2 + Enterprise Extensions)
 // Multi-tenant enterprise SaaS for jewelry and gold retail
-
 generator client {
   provider = "prisma-client-js"
 }

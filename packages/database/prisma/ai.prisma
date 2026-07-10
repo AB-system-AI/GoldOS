@@ -4,6 +4,7 @@ model AiConversation {
   id        String               @id @default(uuid()) @db.Uuid
   tenantId  String               @map("tenant_id") @db.Uuid
   userId    String?              @map("user_id") @db.Uuid
+  agentId   String?              @map("agent_id") @db.Uuid
   title     String?              @db.VarChar(255)
   status    AiConversationStatus @default(ACTIVE)
   context   Json                 @default("{}")
@@ -13,10 +14,13 @@ model AiConversation {
   deletedAt DateTime?            @map("deleted_at") @db.Timestamptz(6)
 
   tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agent   AiAgent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
   reports AiReport[]
+  actions AiAction[]
 
   @@index([tenantId])
   @@index([userId])
+  @@index([agentId])
   @@index([status])
   @@map("ai_conversations")
 }

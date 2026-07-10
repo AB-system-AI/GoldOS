@@ -1,0 +1,64 @@
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+
+model DashboardLayout {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  layout    Json      @default("{}")
+  isDefault Boolean   @default(false) @map("is_default")
+  isShared  Boolean   @default(false) @map("is_shared")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant  Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@unique([tenantId, userId, code])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("dashboard_layouts")
+}
+
+model DashboardWidget {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  layoutId  String    @map("layout_id") @db.Uuid
+  widgetType String   @map("widget_type") @db.VarChar(50)
+  title     String    @db.VarChar(100)
+  config    Json      @default("{}")
+  position  Json      @default("{}")
+  size      Json      @default("{}")
+  isVisible Boolean   @default(true) @map("is_visible")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  layout DashboardLayout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([layoutId])
+  @@map("dashboard_widgets")
+}
+
+model DashboardPreference {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  key       String   @db.VarChar(100)
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId, key])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("dashboard_preferences")
+}

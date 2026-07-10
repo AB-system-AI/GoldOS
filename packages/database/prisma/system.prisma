@@ -108,7 +108,14 @@ model AuditLog {
   newValues  Json?       @map("new_values")
   ipAddress  String?     @map("ip_address") @db.VarChar(45)
   userAgent  String?     @map("user_agent") @db.Text
-  requestId  String?     @map("request_id") @db.VarChar(50)
+  requestId       String?  @map("request_id") @db.VarChar(50)
+  correlationId   String?  @map("correlation_id") @db.VarChar(50)
+  countryCode     String?  @map("country_code") @db.Char(2)
+  city            String?  @db.VarChar(100)
+  browser         String?  @db.VarChar(100)
+  operatingSystem String?  @map("operating_system") @db.VarChar(100)
+  deviceType      String?  @map("device_type") @db.VarChar(50)
+  geo             Json?
   createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt  DateTime?   @map("deleted_at") @db.Timestamptz(6)
@@ -131,7 +138,17 @@ model ActivityLog {
   activity   String    @db.VarChar(100)
   entityType String?   @map("entity_type") @db.VarChar(50)
   entityId   String?   @map("entity_id") @db.Uuid
-  metadata   Json      @default("{}")
+  metadata        Json      @default("{}")
+  ipAddress       String?   @map("ip_address") @db.VarChar(45)
+  userAgent       String?   @map("user_agent") @db.Text
+  requestId       String?   @map("request_id") @db.VarChar(50)
+  correlationId   String?   @map("correlation_id") @db.VarChar(50)
+  countryCode     String?   @map("country_code") @db.Char(2)
+  city            String?   @db.VarChar(100)
+  browser         String?   @db.VarChar(100)
+  operatingSystem String?   @map("operating_system") @db.VarChar(100)
+  deviceType      String?   @map("device_type") @db.VarChar(50)
+  geo             Json?
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)

@@ -1,0 +1,73 @@
+// ─── Barcode / QR ────────────────────────────────────────────────────────────
+
+model BarcodeTemplate {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  code       String    @db.VarChar(50)
+  name       String    @db.VarChar(100)
+  format     String    @db.VarChar(30)
+  entityType String?   @map("entity_type") @db.VarChar(50)
+  template   Json      @default("{}")
+  isDefault  Boolean   @default(false) @map("is_default")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scans  BarcodeScan[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("barcode_templates")
+}
+
+model BarcodeScan {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  templateId   String?          @map("template_id") @db.Uuid
+  branchId     String?          @map("branch_id") @db.Uuid
+  userId       String?          @map("user_id") @db.Uuid
+  barcodeValue String           @map("barcode_value") @db.VarChar(255)
+  result       BarcodeScanResult
+  entityType   String?          @map("entity_type") @db.VarChar(50)
+  entityId     String?          @map("entity_id") @db.Uuid
+  deviceId     String?          @map("device_id") @db.Uuid
+  scannedAt    DateTime         @default(now()) @map("scanned_at") @db.Timestamptz(6)
+  metadata     Json             @default("{}")
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  template BarcodeTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  branch   Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([barcodeValue])
+  @@index([scannedAt])
+  @@map("barcode_scans")
+}
+
+model QrCode {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  code       String    @db.VarChar(100)
+  entityType String    @map("entity_type") @db.VarChar(50)
+  entityId   String    @map("entity_id") @db.Uuid
+  payload    Json      @default("{}")
+  imageUrl   String?   @map("image_url") @db.VarChar(500)
+  isActive   Boolean   @default(true) @map("is_active")
+  expiresAt  DateTime? @map("expires_at") @db.Timestamptz(6)
+  scanCount  Int       @default(0) @map("scan_count")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@map("qr_codes")
+}

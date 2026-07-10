@@ -61,6 +61,47 @@ model Tenant {
   addresses          Address[]
   aiConversations    AiConversation[]
   aiReports          AiReport[]
+  employeeInvitations   EmployeeInvitation[]
+  invitationAuditLogs   InvitationAuditLog[]
+  loginAttempts         LoginAttempt[]
+  failedLoginHistory    FailedLoginHistory[]
+  goldPriceSources      GoldPriceSource[]
+  goldPriceSyncLogs     GoldPriceSyncLog[]
+  goldPriceCache        GoldPriceCache[]
+  goldPriceOverrides    GoldPriceOverride[]
+  goldPricingFormulas   GoldPricingFormula[]
+  exchangeRateCache     ExchangeRateCache[]
+  exchangeSyncLogs      ExchangeSyncLog[]
+  aiAgents              AiAgent[]
+  aiPrompts             AiPrompt[]
+  aiContexts            AiContext[]
+  aiActions             AiAction[]
+  aiUsages              AiUsage[]
+  aiTokens              AiToken[]
+  aiFeedbacks           AiFeedback[]
+  aiJobs                AiJob[]
+  dashboardLayouts      DashboardLayout[]
+  dashboardWidgets      DashboardWidget[]
+  dashboardPreferences  DashboardPreference[]
+  savedSearches         SavedSearch[]
+  recentSearches        RecentSearch[]
+  globalSearchIndex     GlobalSearchIndex[]
+  barcodeTemplates      BarcodeTemplate[]
+  barcodeScans          BarcodeScan[]
+  qrCodes               QrCode[]
+  thermalPrinters       ThermalPrinter[]
+  printerProfiles       PrinterProfile[]
+  printJobs             PrintJob[]
+  printTemplates        PrintTemplate[]
+  tenantFeatures        TenantFeature[]
+  moduleConfigurations  ModuleConfiguration[]
+  subscriptionUsages    SubscriptionUsage[]
+  subscriptionOverages  SubscriptionOverage[]
+  activityTimelines     ActivityTimeline[]
+  timelineComments      TimelineComment[]
+  timelineAttachments   TimelineAttachment[]
+  deletedRecords        DeletedRecord[]
+  restoreJobs           RestoreJob[]
 
   @@index([status])
   @@index([deletedAt])
@@ -108,6 +149,12 @@ model Plan {
   maxUsers     Int          @default(5) @map("max_users")
   maxBranches  Int          @default(1) @map("max_branches")
   maxStorageGb Int          @default(10) @map("max_storage_gb")
+  maxEmployees Int          @default(5) @map("max_employees")
+  maxApiCalls  Int          @default(10000) @map("max_api_calls")
+  maxAiCredits Decimal      @default(0) @map("max_ai_credits") @db.Decimal(12, 4)
+  maxWhatsappCredits Decimal @default(0) @map("max_whatsapp_credits") @db.Decimal(12, 4)
+  maxSmsCredits Decimal     @default(0) @map("max_sms_credits") @db.Decimal(12, 4)
+  maxPushCredits Decimal    @default(0) @map("max_push_credits") @db.Decimal(12, 4)
   features     Json         @default("[]")
   isActive     Boolean      @default(true) @map("is_active")
   sortOrder    Int          @default(0) @map("sort_order")
@@ -139,6 +186,7 @@ model Subscription {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   plan   Plan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+  usages SubscriptionUsage[]
 
   @@index([tenantId])
   @@index([planId])

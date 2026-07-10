@@ -28,6 +28,22 @@ model User {
   employee     Employee?
   auditLogs    AuditLog[]
   activityLogs ActivityLog[]
+  invitationsCreated      EmployeeInvitation[] @relation("InvitationCreatedBy")
+  invitationsAccepted     EmployeeInvitation[] @relation("InvitationAcceptedBy")
+  invitationsCancelled    EmployeeInvitation[] @relation("InvitationCancelledBy")
+  invitationAudits        InvitationAuditLog[] @relation("InvitationAuditPerformer")
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  phoneVerificationTokens PhoneVerificationToken[]
+  mfaRecoveryCodes        MfaRecoveryCode[]
+  trustedDevices          TrustedDevice[]
+  loginAttempts           LoginAttempt[]
+  failedLoginHistory      FailedLoginHistory[]
+  accountLocks            AccountLock[] @relation("AccountLockUser")
+  accountLocksAdmin       AccountLock[] @relation("AccountLockAdmin")
+  passwordHistory         PasswordHistory[]
+  rememberedDevices       RememberedDevice[]
+  goldPriceOverrides      GoldPriceOverride[] @relation("GoldPriceOverrideCreator")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -51,6 +67,7 @@ model Role {
   tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   users           User[]
   rolePermissions RolePermission[]
+  invitations     EmployeeInvitation[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -178,7 +195,8 @@ model Device {
   tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   branch   Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  sessions Session[]
+  sessions       Session[]
+  trustedDevices TrustedDevice[]
 
   @@unique([tenantId, identifier])
   @@index([tenantId])
