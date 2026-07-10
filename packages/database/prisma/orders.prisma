@@ -1,0 +1,111 @@
+// ─── Purchase & Sales Orders ─────────────────────────────────────────────────
+
+model PurchaseOrder {
+  id           String              @id @default(uuid()) @db.Uuid
+  tenantId     String              @map("tenant_id") @db.Uuid
+  branchId     String              @map("branch_id") @db.Uuid
+  supplierId   String              @map("supplier_id") @db.Uuid
+  orderNo      String              @map("order_no") @db.VarChar(30)
+  status       PurchaseOrderStatus @default(DRAFT)
+  orderDate    DateTime            @map("order_date") @db.Date
+  expectedDate DateTime?           @map("expected_date") @db.Date
+  currency     String              @default("SAR") @db.Char(3)
+  subtotal     Decimal             @default(0) @db.Decimal(18, 4)
+  taxAmount    Decimal             @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount  Decimal             @default(0) @map("total_amount") @db.Decimal(18, 4)
+  notes        String?             @db.Text
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch   Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  lines    PurchaseOrderLine[]
+
+  @@unique([tenantId, orderNo])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  purchaseOrderId String    @map("purchase_order_id") @db.Uuid
+  productId       String    @map("product_id") @db.Uuid
+  lineNo          Int       @map("line_no")
+  quantity        Int       @default(1)
+  unitCost        Decimal   @map("unit_cost") @db.Decimal(18, 4)
+  totalCost       Decimal   @map("total_cost") @db.Decimal(18, 4)
+  receivedQty     Int       @default(0) @map("received_qty")
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([purchaseOrderId, lineNo])
+  @@index([purchaseOrderId])
+  @@index([productId])
+  @@map("purchase_order_lines")
+}
+
+model SalesOrder {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  branchId     String           @map("branch_id") @db.Uuid
+  customerId   String           @map("customer_id") @db.Uuid
+  orderNo      String           @map("order_no") @db.VarChar(30)
+  status       SalesOrderStatus @default(DRAFT)
+  orderDate    DateTime         @map("order_date") @db.Date
+  currency     String           @default("SAR") @db.Char(3)
+  subtotal     Decimal          @default(0) @db.Decimal(18, 4)
+  discountAmount Decimal        @default(0) @map("discount_amount") @db.Decimal(18, 4)
+  taxAmount    Decimal          @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount  Decimal          @default(0) @map("total_amount") @db.Decimal(18, 4)
+  notes        String?          @db.Text
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch   Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lines    SalesOrderLine[]
+  invoices Invoice[]
+
+  @@unique([tenantId, orderNo])
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("sales_orders")
+}
+
+model SalesOrderLine {
+  id           String    @id @default(uuid()) @db.Uuid
+  salesOrderId String    @map("sales_order_id") @db.Uuid
+  productId    String    @map("product_id") @db.Uuid
+  lineNo       Int       @map("line_no")
+  quantity     Int       @default(1)
+  unitPrice    Decimal   @map("unit_price") @db.Decimal(18, 4)
+  discount     Decimal   @default(0) @db.Decimal(18, 4)
+  taxAmount    Decimal   @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount  Decimal   @map("total_amount") @db.Decimal(18, 4)
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([salesOrderId, lineNo])
+  @@index([salesOrderId])
+  @@index([productId])
+  @@map("sales_order_lines")
+}

@@ -1,0 +1,99 @@
+// ─── Branches, Employees & Workshops ─────────────────────────────────────────
+
+model Branch {
+  id             String     @id @default(uuid()) @db.Uuid
+  tenantId       String     @map("tenant_id") @db.Uuid
+  organizationId String     @map("organization_id") @db.Uuid
+  code           String     @db.VarChar(20)
+  name           String     @db.VarChar(255)
+  type           BranchType @default(SHOWROOM)
+  phone          String?    @db.VarChar(30)
+  email          String?    @db.VarChar(255)
+  isActive       Boolean    @default(true) @map("is_active")
+  isHeadOffice   Boolean    @default(false) @map("is_head_office")
+  timezone       String?    @db.VarChar(50)
+  metadata       Json       @default("{}")
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?  @map("deleted_at") @db.Timestamptz(6)
+
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userBranches      UserBranch[]
+  devices           Device[]
+  employees         Employee[]
+  workshops         Workshop[]
+  inventoryItems    InventoryItem[]
+  transfersFrom     Transfer[]         @relation("TransferFromBranch")
+  transfersTo       Transfer[]         @relation("TransferToBranch")
+  reservations      Reservation[]
+  purchaseOrders    PurchaseOrder[]
+  salesOrders       SalesOrder[]
+  invoices          Invoice[]
+  cashRegisters     CashRegister[]
+  manufacturingOrders ManufacturingOrder[]
+  repairOrders      RepairOrder[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([organizationId])
+  @@index([tenantId, deletedAt])
+  @@map("branches")
+}
+
+model Employee {
+  id           String         @id @default(uuid()) @db.Uuid
+  tenantId     String         @map("tenant_id") @db.Uuid
+  branchId     String?        @map("branch_id") @db.Uuid
+  userId       String?        @unique @map("user_id") @db.Uuid
+  employeeNo   String         @map("employee_no") @db.VarChar(30)
+  firstName    String         @map("first_name") @db.VarChar(100)
+  lastName     String         @map("last_name") @db.VarChar(100)
+  email        String?        @db.VarChar(255)
+  phone        String?        @db.VarChar(30)
+  jobTitle     String?        @map("job_title") @db.VarChar(100)
+  department   String?        @db.VarChar(100)
+  hireDate     DateTime?      @map("hire_date") @db.Date
+  status       EmployeeStatus @default(ACTIVE)
+  metadata     Json           @default("{}")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, employeeNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([status])
+  @@index([tenantId, deletedAt])
+  @@map("employees")
+}
+
+model Workshop {
+  id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @map("tenant_id") @db.Uuid
+  branchId    String?        @map("branch_id") @db.Uuid
+  code        String         @db.VarChar(20)
+  name        String         @db.VarChar(255)
+  status      WorkshopStatus @default(ACTIVE)
+  capacity    Int?
+  description String?        @db.Text
+  metadata    Json           @default("{}")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch              Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  manufacturingOrders ManufacturingOrder[]
+  repairOrders        RepairOrder[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([status])
+  @@map("workshops")
+}

@@ -1,0 +1,474 @@
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum TenantStatus {
+  PROVISIONING
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  ARCHIVED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PlanInterval {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum BranchType {
+  SHOWROOM
+  WORKSHOP
+  WAREHOUSE
+  VAULT
+  OFFICE
+  HEADQUARTERS
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+  PENDING_VERIFICATION
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum WorkshopStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum PartnerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum ProductType {
+  GOLD
+  DIAMOND
+  GEMSTONE
+  WATCH
+  SILVER
+  ACCESSORY
+  OTHER
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum InventoryStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  IN_TRANSIT
+  DAMAGED
+  QUARANTINE
+  RETURNED
+}
+
+enum StockMovementType {
+  RECEIPT
+  SALE
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT
+  RETURN
+  RESERVATION
+  RELEASE
+  MANUFACTURING
+  REPAIR
+}
+
+enum TransferStatus {
+  DRAFT
+  PENDING
+  IN_TRANSIT
+  RECEIVED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  FULFILLED
+  EXPIRED
+  CANCELLED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+  CLOSED
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_FULFILLED
+  FULFILLED
+  INVOICED
+  CANCELLED
+  CLOSED
+}
+
+enum InvoiceType {
+  SALE
+  RETURN
+  CREDIT_NOTE
+  DEBIT_NOTE
+  PROFORMA
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  COMPLETED
+  VOIDED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  REFUNDED
+  VOIDED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  CHEQUE
+  MOBILE_WALLET
+  GOLD_EXCHANGE
+  STORE_CREDIT
+  OTHER
+}
+
+enum ExpenseStatus {
+  DRAFT
+  APPROVED
+  PAID
+  REJECTED
+  VOIDED
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+  TRANSFER
+  ADJUSTMENT
+  FEE
+  INTEREST
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum CashRegisterStatus {
+  OPEN
+  CLOSED
+  SUSPENDED
+}
+
+enum BankAccountType {
+  CHECKING
+  SAVINGS
+  MERCHANT
+  ESCROW
+}
+
+enum MakingChargeType {
+  PER_GRAM
+  FIXED
+  PERCENTAGE
+}
+
+enum GoldKarat {
+  K8
+  K9
+  K14
+  K18
+  K21
+  K22
+  K24
+}
+
+enum DiamondCut {
+  ROUND
+  PRINCESS
+  CUSHION
+  OVAL
+  EMERALD
+  PEAR
+  MARQUISE
+  RADIANT
+  ASSCHER
+  HEART
+  OTHER
+}
+
+enum DiamondColor {
+  D
+  E
+  F
+  G
+  H
+  I
+  J
+  K
+  L
+  M
+  FANCY
+  OTHER
+}
+
+enum DiamondClarity {
+  FL
+  IF
+  VVS1
+  VVS2
+  VS1
+  VS2
+  SI1
+  SI2
+  I1
+  I2
+  I3
+  OTHER
+}
+
+enum GemstoneType {
+  RUBY
+  SAPPHIRE
+  EMERALD
+  PEARL
+  TURQUOISE
+  OPAL
+  AMETHYST
+  TOPAZ
+  GARNET
+  OTHER
+}
+
+enum ManufacturingOrderStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  QUALITY_CHECK
+  COMPLETED
+  CANCELLED
+}
+
+enum RepairOrderStatus {
+  DRAFT
+  RECEIVED
+  DIAGNOSING
+  IN_PROGRESS
+  AWAITING_PARTS
+  COMPLETED
+  DELIVERED
+  CANCELLED
+}
+
+enum CertificateType {
+  GIA
+  IGI
+  HRD
+  AGS
+  LOCAL
+  CUSTOM
+  OTHER
+}
+
+enum CertificateStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  PENDING
+}
+
+enum AddressableType {
+  ORGANIZATION
+  BRANCH
+  CUSTOMER
+  SUPPLIER
+  MANUFACTURER
+  EMPLOYEE
+  USER
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+  APPROVE
+  VOID
+  TRANSFER
+  PAYMENT
+  OTHER
+}
+
+enum WebhookStatus {
+  ACTIVE
+  INACTIVE
+  FAILED
+}
+
+enum IntegrationProvider {
+  ZATCA
+  STRIPE
+  QUICKBOOKS
+  XERO
+  SHOPIFY
+  WHATSAPP
+  SMS_GATEWAY
+  GOLD_FEED
+  CUSTOM
+}
+
+enum IntegrationStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+  PENDING_SETUP
+}
+
+enum FileStatus {
+  UPLOADING
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  AUDIO
+  OTHER
+}
+
+enum BackupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum BackupType {
+  FULL
+  INCREMENTAL
+  SCHEMA_ONLY
+  DATA_ONLY
+}
+
+enum SettingScope {
+  TENANT
+  ORGANIZATION
+  BRANCH
+  USER
+}
+
+enum AiConversationStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum AiReportStatus {
+  PENDING
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+enum ApiKeyStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum DeviceType {
+  POS
+  TABLET
+  MOBILE
+  DESKTOP
+  PRINTER
+  SCANNER
+  OTHER
+}
+
+enum SessionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum PricingRuleType {
+  GOLD_RATE
+  MAKING_CHARGE
+  DISCOUNT
+  MARKUP
+  BUNDLE
+  CUSTOM
+}
+
+enum TaxRuleType {
+  VAT
+  SALES_TAX
+  WITHHOLDING
+  EXEMPT
+  CUSTOM
+}

@@ -1,0 +1,48 @@
+// ─── AI Features ─────────────────────────────────────────────────────────────
+
+model AiConversation {
+  id        String               @id @default(uuid()) @db.Uuid
+  tenantId  String               @map("tenant_id") @db.Uuid
+  userId    String?              @map("user_id") @db.Uuid
+  title     String?              @db.VarChar(255)
+  status    AiConversationStatus @default(ACTIVE)
+  context   Json                 @default("{}")
+  metadata  Json                 @default("{}")
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?            @map("deleted_at") @db.Timestamptz(6)
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reports AiReport[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@map("ai_conversations")
+}
+
+model AiReport {
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  conversationId String?        @map("conversation_id") @db.Uuid
+  userId         String?        @map("user_id") @db.Uuid
+  title          String         @db.VarChar(255)
+  reportType     String         @map("report_type") @db.VarChar(50)
+  status         AiReportStatus @default(PENDING)
+  prompt         String?        @db.Text
+  content        Json?
+  errorMessage   String?        @map("error_message") @db.Text
+  generatedAt    DateTime?      @map("generated_at") @db.Timestamptz(6)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversation AiConversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([conversationId])
+  @@index([status])
+  @@index([reportType])
+  @@map("ai_reports")
+}

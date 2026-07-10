@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SKIP_ENV_VALIDATION: 'true'
+  DATABASE_URL: postgresql://goldos:goldos@localhost:5432/goldos?schema=public
+  AUTH_SECRET: ci-auth-secret-with-at-least-32-characters
+  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_SECRET: ci-nextauth-secret-with-at-least-32-characters
+  API_URL: http://localhost:3001
+  WEB_URL: http://localhost:3000
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  NEXT_PUBLIC_API_URL: http://localhost:3001
+  LOG_LEVEL: error
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  quality:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build

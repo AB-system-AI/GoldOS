@@ -1,0 +1,11 @@
+// GoldOS — Production Database Schema (Phase 2)
+// Multi-tenant enterprise SaaS for jewelry and gold retail
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

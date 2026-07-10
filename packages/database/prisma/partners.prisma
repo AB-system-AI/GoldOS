@@ -1,0 +1,86 @@
+// ─── Partners: Customers, Suppliers, Manufacturers ───────────────────────────
+
+model Customer {
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String        @map("tenant_id") @db.Uuid
+  customerNo     String        @map("customer_no") @db.VarChar(30)
+  name           String        @db.VarChar(255)
+  email          String?       @db.VarChar(255)
+  phone          String        @db.VarChar(30)
+  phoneSecondary String?       @map("phone_secondary") @db.VarChar(30)
+  idNumber       String?       @map("id_number") @db.VarChar(50)
+  tier           String        @default("standard") @db.VarChar(20)
+  loyaltyPoints  Int           @default(0) @map("loyalty_points")
+  totalSpent     Decimal       @default(0) @map("total_spent") @db.Decimal(18, 4)
+  status         PartnerStatus @default(ACTIVE)
+  notes          String?       @db.Text
+  tags           String[]      @default([])
+  metadata       Json          @default("{}")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  reservations Reservation[]
+  salesOrders  SalesOrder[]
+  invoices     Invoice[]
+  repairOrders RepairOrder[]
+
+  @@unique([tenantId, customerNo])
+  @@index([tenantId])
+  @@index([phone])
+  @@index([email])
+  @@index([tenantId, deletedAt])
+  @@map("customers")
+}
+
+model Supplier {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @map("tenant_id") @db.Uuid
+  supplierNo   String        @map("supplier_no") @db.VarChar(30)
+  name         String        @db.VarChar(255)
+  contactName  String?       @map("contact_name") @db.VarChar(150)
+  email        String?       @db.VarChar(255)
+  phone        String?       @db.VarChar(30)
+  taxId        String?       @map("tax_id") @db.VarChar(50)
+  paymentTerms String?       @map("payment_terms") @db.VarChar(50)
+  status       PartnerStatus @default(ACTIVE)
+  notes        String?       @db.Text
+  metadata     Json          @default("{}")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  purchaseOrders PurchaseOrder[]
+
+  @@unique([tenantId, supplierNo])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@map("suppliers")
+}
+
+model Manufacturer {
+  id        String        @id @default(uuid()) @db.Uuid
+  tenantId  String        @map("tenant_id") @db.Uuid
+  code      String        @db.VarChar(30)
+  name      String        @db.VarChar(255)
+  country   String?       @db.VarChar(100)
+  email     String?       @db.VarChar(255)
+  phone     String?       @db.VarChar(30)
+  website   String?       @db.VarChar(255)
+  status    PartnerStatus @default(ACTIVE)
+  notes     String?       @db.Text
+  metadata  Json          @default("{}")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@map("manufacturers")
+}

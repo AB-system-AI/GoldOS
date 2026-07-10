@@ -1,0 +1,232 @@
+// ─── System, Files & Integrations ────────────────────────────────────────────
+
+model File {
+  id           String     @id @default(uuid()) @db.Uuid
+  tenantId     String?    @map("tenant_id") @db.Uuid
+  key          String     @db.VarChar(500)
+  bucket       String     @db.VarChar(100)
+  filename     String     @db.VarChar(255)
+  mimeType     String     @map("mime_type") @db.VarChar(100)
+  sizeBytes    BigInt     @map("size_bytes")
+  checksum     String?    @db.VarChar(64)
+  status       FileStatus @default(ACTIVE)
+  uploadedById String?    @map("uploaded_by_id") @db.Uuid
+  metadata     Json       @default("{}")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  organizations Organization[]
+  brands        Brand[]
+  certificates  Certificate[]
+  media         Media[]
+  attachments   Attachment[]
+  backups       Backup[]
+
+  @@index([tenantId])
+  @@index([key])
+  @@index([status])
+  @@map("files")
+}
+
+model Media {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  fileId       String    @map("file_id") @db.Uuid
+  type         MediaType
+  entityType   String    @map("entity_type") @db.VarChar(50)
+  entityId     String    @map("entity_id") @db.Uuid
+  altText      String?   @map("alt_text") @db.VarChar(255)
+  sortOrder    Int       @default(0) @map("sort_order")
+  isPrimary    Boolean   @default(false) @map("is_primary")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([fileId])
+  @@map("media")
+}
+
+model Attachment {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  fileId     String    @map("file_id") @db.Uuid
+  entityType String    @map("entity_type") @db.VarChar(50)
+  entityId   String    @map("entity_id") @db.Uuid
+  label      String?   @db.VarChar(100)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([fileId])
+  @@map("attachments")
+}
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  tenantId  String              @map("tenant_id") @db.Uuid
+  userId    String?             @map("user_id") @db.Uuid
+  channel   NotificationChannel
+  status    NotificationStatus  @default(PENDING)
+  title     String              @db.VarChar(255)
+  body      String              @db.Text
+  data      Json                @default("{}")
+  readAt    DateTime?           @map("read_at") @db.Timestamptz(6)
+  sentAt    DateTime?           @map("sent_at") @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  tenantId   String      @map("tenant_id") @db.Uuid
+  userId     String?     @map("user_id") @db.Uuid
+  action     AuditAction
+  entityType String      @map("entity_type") @db.VarChar(50)
+  entityId   String?     @map("entity_id") @db.Uuid
+  oldValues  Json?       @map("old_values")
+  newValues  Json?       @map("new_values")
+  ipAddress  String?     @map("ip_address") @db.VarChar(45)
+  userAgent  String?     @map("user_agent") @db.Text
+  requestId  String?     @map("request_id") @db.VarChar(50)
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?   @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model ActivityLog {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  userId     String?   @map("user_id") @db.Uuid
+  activity   String    @db.VarChar(100)
+  entityType String?   @map("entity_type") @db.VarChar(50)
+  entityId   String?   @map("entity_id") @db.Uuid
+  metadata   Json      @default("{}")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Webhook {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @map("tenant_id") @db.Uuid
+  name        String        @db.VarChar(100)
+  url         String        @db.VarChar(500)
+  secret      String        @db.VarChar(255)
+  events      String[]      @default([])
+  status      WebhookStatus @default(ACTIVE)
+  lastTriggeredAt DateTime? @map("last_triggered_at") @db.Timestamptz(6)
+  failureCount Int          @default(0) @map("failure_count")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("webhooks")
+}
+
+model Integration {
+  id           String              @id @default(uuid()) @db.Uuid
+  tenantId     String              @map("tenant_id") @db.Uuid
+  provider     IntegrationProvider
+  status       IntegrationStatus   @default(PENDING_SETUP)
+  credentials  Json                @default("{}")
+  settings     Json                @default("{}")
+  lastSyncAt   DateTime?           @map("last_sync_at") @db.Timestamptz(6)
+  errorMessage String?             @map("error_message") @db.Text
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, provider])
+  @@index([tenantId])
+  @@index([status])
+  @@map("integrations")
+}
+
+model Backup {
+  id          String       @id @default(uuid()) @db.Uuid
+  tenantId    String?      @map("tenant_id") @db.Uuid
+  type        BackupType
+  status      BackupStatus @default(PENDING)
+  fileId      String?      @map("file_id") @db.Uuid
+  sizeBytes   BigInt?      @map("size_bytes")
+  startedAt   DateTime?    @map("started_at") @db.Timestamptz(6)
+  completedAt DateTime?    @map("completed_at") @db.Timestamptz(6)
+  expiresAt   DateTime?    @map("expires_at") @db.Timestamptz(6)
+  errorMessage String?     @map("error_message") @db.Text
+  metadata    Json         @default("{}")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  file   File?   @relation(fields: [fileId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([type])
+  @@map("backups")
+}
+
+model Setting {
+  id        String       @id @default(uuid()) @db.Uuid
+  tenantId  String       @map("tenant_id") @db.Uuid
+  scope     SettingScope @default(TENANT)
+  scopeId   String?      @map("scope_id") @db.Uuid
+  key       String       @db.VarChar(100)
+  value     Json
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, scope, scopeId, key])
+  @@index([tenantId])
+  @@index([scope, scopeId])
+  @@map("settings")
+}

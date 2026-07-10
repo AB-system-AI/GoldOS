@@ -1,0 +1,68 @@
+// ─── Geography & Addresses ───────────────────────────────────────────────────
+
+model Country {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique @db.Char(2)
+  code3     String   @unique @map("code3") @db.Char(3)
+  name      String   @db.VarChar(100)
+  phoneCode String?  @map("phone_code") @db.VarChar(10)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  cities City[]
+
+  @@index([isActive])
+  @@index([deletedAt])
+  @@map("countries")
+}
+
+model City {
+  id        String   @id @default(uuid()) @db.Uuid
+  countryId String   @map("country_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  stateCode String?  @map("state_code") @db.VarChar(20)
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  country   Country   @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  addresses Address[]
+
+  @@unique([countryId, name, stateCode])
+  @@index([countryId])
+  @@index([isActive])
+  @@map("cities")
+}
+
+model Address {
+  id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @map("tenant_id") @db.Uuid
+  addressableType AddressableType @map("addressable_type")
+  addressableId  String          @map("addressable_id") @db.Uuid
+  cityId         String?         @map("city_id") @db.Uuid
+  label          String?         @db.VarChar(50)
+  line1          String          @map("line1") @db.VarChar(255)
+  line2          String?         @map("line2") @db.VarChar(255)
+  postalCode     String?         @map("postal_code") @db.VarChar(20)
+  countryCode    String          @map("country_code") @db.Char(2)
+  latitude       Decimal?        @db.Decimal(10, 7)
+  longitude      Decimal?        @db.Decimal(10, 7)
+  isPrimary      Boolean         @default(false) @map("is_primary")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?       @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  city   City?  @relation(fields: [cityId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([addressableType, addressableId])
+  @@index([cityId])
+  @@index([tenantId, deletedAt])
+  @@map("addresses")
+}

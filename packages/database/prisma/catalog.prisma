@@ -1,0 +1,145 @@
+// ─── Product Catalog ─────────────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  code        String   @db.VarChar(50)
+  name        String   @db.VarChar(150)
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([tenantId, deletedAt])
+  @@map("categories")
+}
+
+model Brand {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String   @db.VarChar(50)
+  name      String   @db.VarChar(150)
+  logoFileId String? @map("logo_file_id") @db.Uuid
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  logoFile File?     @relation(fields: [logoFileId], references: [id], onDelete: SetNull)
+  products Product[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@map("brands")
+}
+
+model Product {
+  id               String        @id @default(uuid()) @db.Uuid
+  tenantId         String        @map("tenant_id") @db.Uuid
+  categoryId       String?       @map("category_id") @db.Uuid
+  brandId          String?       @map("brand_id") @db.Uuid
+  manufacturerId   String?       @map("manufacturer_id") @db.Uuid
+  sku              String        @db.VarChar(50)
+  name             String        @db.VarChar(255)
+  type             ProductType
+  status           ProductStatus @default(ACTIVE)
+  description      String?       @db.Text
+  barcode          String?       @db.VarChar(50)
+  makingChargeType MakingChargeType? @map("making_charge_type")
+  makingChargeValue Decimal?     @map("making_charge_value") @db.Decimal(12, 4)
+  metadata         Json          @default("{}")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand          Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  manufacturer   Manufacturer?   @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  goldItem       GoldItem?
+  diamondItem    DiamondItem?
+  gemstone       Gemstone?
+  inventoryItems InventoryItem[]
+  purchaseOrderLines PurchaseOrderLine[]
+  salesOrderLines    SalesOrderLine[]
+  invoiceItems       InvoiceItem[]
+  certificates       Certificate[]
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([type])
+  @@index([tenantId, deletedAt])
+  @@map("products")
+}
+
+model GoldItem {
+  id          String           @id @default(uuid()) @db.Uuid
+  productId   String           @unique @map("product_id") @db.Uuid
+  karat       GoldKarat
+  grossWeight Decimal          @map("gross_weight") @db.Decimal(12, 4)
+  netWeight   Decimal          @map("net_weight") @db.Decimal(12, 4)
+  purity      Decimal?         @db.Decimal(5, 2)
+  hallmark    String?          @db.VarChar(50)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([karat])
+  @@map("gold_items")
+}
+
+model DiamondItem {
+  id                String         @id @default(uuid()) @db.Uuid
+  productId         String         @unique @map("product_id") @db.Uuid
+  carat             Decimal        @db.Decimal(8, 4)
+  cut               DiamondCut?
+  color             DiamondColor?
+  clarity           DiamondClarity?
+  certificateNumber String?        @map("certificate_number") @db.VarChar(50)
+  fluorescence      String?        @db.VarChar(20)
+  measurements      String?        @db.VarChar(50)
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?      @map("deleted_at") @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([carat])
+  @@map("diamond_items")
+}
+
+model Gemstone {
+  id         String       @id @default(uuid()) @db.Uuid
+  productId  String       @unique @map("product_id") @db.Uuid
+  stoneType  GemstoneType @map("stone_type")
+  carat      Decimal?     @db.Decimal(8, 4)
+  color      String?      @db.VarChar(30)
+  clarity    String?      @db.VarChar(30)
+  origin     String?      @db.VarChar(100)
+  treatment  String?      @db.VarChar(100)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?    @map("deleted_at") @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([stoneType])
+  @@map("gemstones")
+}
