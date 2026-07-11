@@ -1,0 +1,49 @@
+{
+  "name": "@goldos/business",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./container": {
+      "types": "./dist/container.d.ts",
+      "default": "./dist/container.js"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "default": "./dist/errors/index.js"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "default": "./dist/services/index.js"
+    },
+    "./engines/gold-price": {
+      "types": "./dist/engines/gold-price/index.d.ts",
+      "default": "./dist/engines/gold-price/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rimraf dist",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@goldos/database": "workspace:*",
+    "@goldos/types": "workspace:*",
+    "@goldos/utils": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@goldos/eslint-config": "workspace:*",
+    "@goldos/tsconfig": "workspace:*",
+    "@types/node": "^22.12.0",
+    "eslint": "^9.18.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.3"
+  }
+}

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@goldos/auth": "workspace:*",
+    "@goldos/business": "workspace:*",
     "@goldos/config": "workspace:*",
     "@goldos/database": "workspace:*",
     "@goldos/types": "workspace:*",

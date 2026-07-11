@@ -461,6 +461,36 @@ enum RevokedRefreshTokenReason {
   REUSE_DETECTED
 }
 
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+  VIP
+  WALK_IN
+}
+
+enum SupplierType {
+  LOCAL
+  INTERNATIONAL
+  MANUFACTURER
+  WORKSHOP
+}
+
+enum BranchStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  CLOSED
+}
+
+enum EmploymentEventType {
+  HIRED
+  PROMOTED
+  TRANSFERRED
+  LEAVE
+  RETURNED
+  TERMINATED
+}
+
 enum PricingRuleType {
   GOLD_RATE
   MAKING_CHARGE

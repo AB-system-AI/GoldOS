@@ -1,41 +1,53 @@
 // ─── Branches, Employees & Workshops ─────────────────────────────────────────
 
 model Branch {
-  id             String     @id @default(uuid()) @db.Uuid
-  tenantId       String     @map("tenant_id") @db.Uuid
-  organizationId String     @map("organization_id") @db.Uuid
-  code           String     @db.VarChar(20)
-  name           String     @db.VarChar(255)
-  type           BranchType @default(SHOWROOM)
-  phone          String?    @db.VarChar(30)
-  email          String?    @db.VarChar(255)
-  isActive       Boolean    @default(true) @map("is_active")
-  isHeadOffice   Boolean    @default(false) @map("is_head_office")
-  timezone       String?    @db.VarChar(50)
-  metadata       Json       @default("{}")
-  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt      DateTime?  @map("deleted_at") @db.Timestamptz(6)
+  id                       String       @id @default(uuid()) @db.Uuid
+  tenantId                 String       @map("tenant_id") @db.Uuid
+  organizationId           String       @map("organization_id") @db.Uuid
+  code                     String       @db.VarChar(20)
+  name                     String       @db.VarChar(255)
+  type                     BranchType   @default(SHOWROOM)
+  branchStatus             BranchStatus @default(ACTIVE) @map("branch_status")
+  phone                    String?      @db.VarChar(30)
+  email                    String?      @db.VarChar(255)
+  isActive                 Boolean      @default(true) @map("is_active")
+  isHeadOffice             Boolean      @default(false) @map("is_head_office")
+  timezone                 String?      @db.VarChar(50)
+  managerId                String?      @map("manager_id") @db.Uuid
+  defaultCurrencyCode      String?      @map("default_currency_code") @db.Char(3)
+  defaultWarehouseBranchId String?      @map("default_warehouse_branch_id") @db.Uuid
+  workingHours             Json         @default("{}") @map("working_hours")
+  taxConfiguration         Json         @default("{}") @map("tax_configuration")
+  metadata                 Json         @default("{}")
+  createdAt                DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt                DateTime?    @map("deleted_at") @db.Timestamptz(6)
 
-  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  userBranches        UserBranch[]
-  devices             Device[]
-  employees           Employee[]
-  workshops           Workshop[]
-  inventoryItems      InventoryItem[]
-  transfersFrom       Transfer[]           @relation("TransferFromBranch")
-  transfersTo         Transfer[]           @relation("TransferToBranch")
-  reservations        Reservation[]
-  purchaseOrders      PurchaseOrder[]
-  salesOrders         SalesOrder[]
-  invoices            Invoice[]
-  cashRegisters       CashRegister[]
-  manufacturingOrders ManufacturingOrder[]
-  repairOrders        RepairOrder[]
-  barcodeScans        BarcodeScan[]
-  thermalPrinters     ThermalPrinter[]
-  employeeInvitations EmployeeInvitation[]
+  tenant                 Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  manager                Employee?            @relation("BranchManager", fields: [managerId], references: [id], onDelete: SetNull)
+  defaultWarehouseBranch Branch?              @relation("BranchDefaultWarehouse", fields: [defaultWarehouseBranchId], references: [id], onDelete: SetNull)
+  warehouseForBranches   Branch[]             @relation("BranchDefaultWarehouse")
+  userBranches           UserBranch[]
+  devices                Device[]
+  employees              Employee[]
+  employeeBranches       EmployeeBranch[]
+  employmentHistory      EmploymentHistory[]
+  branchCurrencies       BranchCurrency[]
+  workshops              Workshop[]
+  inventoryItems         InventoryItem[]
+  transfersFrom          Transfer[]           @relation("TransferFromBranch")
+  transfersTo            Transfer[]           @relation("TransferToBranch")
+  reservations           Reservation[]
+  purchaseOrders         PurchaseOrder[]
+  salesOrders            SalesOrder[]
+  invoices               Invoice[]
+  cashRegisters          CashRegister[]
+  manufacturingOrders    ManufacturingOrder[]
+  repairOrders           RepairOrder[]
+  barcodeScans           BarcodeScan[]
+  thermalPrinters        ThermalPrinter[]
+  employeeInvitations    EmployeeInvitation[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -45,28 +57,42 @@ model Branch {
 }
 
 model Employee {
-  id         String         @id @default(uuid()) @db.Uuid
-  tenantId   String         @map("tenant_id") @db.Uuid
-  branchId   String?        @map("branch_id") @db.Uuid
-  userId     String?        @unique @map("user_id") @db.Uuid
-  employeeNo String         @map("employee_no") @db.VarChar(30)
-  firstName  String         @map("first_name") @db.VarChar(100)
-  lastName   String         @map("last_name") @db.VarChar(100)
-  email      String?        @db.VarChar(255)
-  phone      String?        @db.VarChar(30)
-  jobTitle   String?        @map("job_title") @db.VarChar(100)
-  department String?        @db.VarChar(100)
-  hireDate   DateTime?      @map("hire_date") @db.Date
-  status     EmployeeStatus @default(ACTIVE)
-  metadata   Json           @default("{}")
-  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt  DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  id           String         @id @default(uuid()) @db.Uuid
+  tenantId     String         @map("tenant_id") @db.Uuid
+  branchId     String?        @map("branch_id") @db.Uuid
+  userId       String?        @unique @map("user_id") @db.Uuid
+  managerId    String?        @map("manager_id") @db.Uuid
+  departmentId String?        @map("department_id") @db.Uuid
+  jobTitleId   String?        @map("job_title_id") @db.Uuid
+  photoFileId  String?        @map("photo_file_id") @db.Uuid
+  employeeNo   String         @map("employee_no") @db.VarChar(30)
+  firstName    String         @map("first_name") @db.VarChar(100)
+  lastName     String         @map("last_name") @db.VarChar(100)
+  email        String?        @db.VarChar(255)
+  phone        String?        @db.VarChar(30)
+  jobTitle     String?        @map("job_title") @db.VarChar(100)
+  department   String?        @db.VarChar(100)
+  hireDate     DateTime?      @map("hire_date") @db.Date
+  status       EmployeeStatus @default(ACTIVE)
+  notes        String?        @db.Text
+  metadata     Json           @default("{}")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
-  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch      Branch?              @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  user        User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  invitations EmployeeInvitation[]
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch            Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  user              User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  manager           Employee?                  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports     Employee[]                 @relation("EmployeeManager")
+  departmentRef     Department?                @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  jobTitleRef       JobTitle?                  @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
+  photoFile         File?                      @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
+  invitations       EmployeeInvitation[]
+  employeeBranches  EmployeeBranch[]
+  employmentHistory EmploymentHistory[]
+  emergencyContacts EmployeeEmergencyContact[]
+  managedBranches   Branch[]                   @relation("BranchManager")
 
   @@unique([tenantId, employeeNo])
   @@index([tenantId])

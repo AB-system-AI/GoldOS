@@ -40,6 +40,9 @@ importers:
       '@goldos/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@goldos/business':
+        specifier: workspace:*
+        version: link:../../packages/business
       '@goldos/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -251,6 +254,40 @@ importers:
       '@types/bcryptjs':
         specifier: ^2.4.6
         version: 2.4.6
+      '@types/node':
+        specifier: ^22.12.0
+        version: 22.20.1
+      eslint:
+        specifier: ^9.18.0
+        version: 9.39.4(jiti@2.7.0)
+      rimraf:
+        specifier: ^6.0.1
+        version: 6.1.3
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
+  packages/business:
+    dependencies:
+      '@goldos/database':
+        specifier: workspace:*
+        version: link:../database
+      '@goldos/types':
+        specifier: workspace:*
+        version: link:../types
+      '@goldos/utils':
+        specifier: workspace:*
+        version: link:../utils
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@goldos/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@goldos/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@types/node':
         specifier: ^22.12.0
         version: 22.20.1

@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     '@goldos/types',
     '@goldos/utils',
     '@goldos/auth',
+    '@goldos/business',
   ],
 };
 

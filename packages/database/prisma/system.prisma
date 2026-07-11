@@ -23,6 +23,7 @@ model File {
   media         Media[]
   attachments   Attachment[]
   backups       Backup[]
+  employees     Employee[]
 
   @@index([tenantId])
   @@index([key])

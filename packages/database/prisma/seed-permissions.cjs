@@ -1,4 +1,17 @@
-const MODULES = ['auth', 'users', 'inventory', 'sales', 'finance', 'hr', 'settings'];
+const MODULES = [
+  'auth',
+  'users',
+  'inventory',
+  'sales',
+  'finance',
+  'hr',
+  'settings',
+  'organization',
+  'branches',
+  'crm',
+  'suppliers',
+  'pricing',
+];
 
 const ACTIONS = [
   'view',
