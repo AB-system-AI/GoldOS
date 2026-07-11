@@ -1,0 +1,403 @@
+// ─── Phase 5: Enterprise Inventory & Gold Operations Foundation ───────────────
+
+model Collection {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  code        String    @db.VarChar(50)
+  name        String    @db.VarChar(150)
+  description String?   @db.Text
+  season      String?   @db.VarChar(50)
+  year        Int?
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+  @@map("collections")
+}
+
+model ProductTag {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  name      String    @db.VarChar(50)
+  color     String?   @db.VarChar(20)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant      Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignments ProductTagAssignment[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("product_tags")
+}
+
+model ProductTagAssignment {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  productId String    @map("product_id") @db.Uuid
+  tagId     String    @map("tag_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     ProductTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, tagId])
+  @@index([tenantId])
+  @@index([productId])
+  @@index([tagId])
+  @@map("product_tag_assignments")
+}
+
+model ProductAttribute {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  code      String    @db.VarChar(50)
+  name      String    @db.VarChar(100)
+  dataType  String    @default("STRING") @map("data_type") @db.VarChar(20)
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values ProductAttributeValue[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("product_attributes")
+}
+
+model ProductAttributeValue {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  productId   String    @map("product_id") @db.Uuid
+  attributeId String    @map("attribute_id") @db.Uuid
+  value       String    @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attribute ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, attributeId])
+  @@index([tenantId])
+  @@index([productId])
+  @@map("product_attribute_values")
+}
+
+model SkuSequence {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  prefix       String   @db.VarChar(20)
+  productType  String?  @map("product_type") @db.VarChar(30)
+  currentValue Int      @default(0) @map("current_value")
+  padLength    Int      @default(6) @map("pad_length")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, prefix, productType])
+  @@index([tenantId])
+  @@map("sku_sequences")
+}
+
+model WarehouseZone {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  branchId  String    @map("branch_id") @db.Uuid
+  code      String    @db.VarChar(30)
+  name      String    @db.VarChar(100)
+  aisle     String?   @db.VarChar(20)
+  rack      String?   @db.VarChar(20)
+  shelf     String?   @db.VarChar(20)
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  inventoryItems InventoryItem[]
+
+  @@unique([tenantId, branchId, code])
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("warehouse_zones")
+}
+
+model AssetLifecycleEvent {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  inventoryItemId String                  @map("inventory_item_id") @db.Uuid
+  fromStage       InventoryLifecycleStage @map("from_stage")
+  toStage         InventoryLifecycleStage @map("to_stage")
+  fromStatus      InventoryStatus?        @map("from_status")
+  toStatus        InventoryStatus?        @map("to_status")
+  reason          String?                 @db.Text
+  performedById   String?                 @map("performed_by_id") @db.Uuid
+  branchId        String?                 @map("branch_id") @db.Uuid
+  occurredAt      DateTime                @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  performedBy   Employee?     @relation(fields: [performedById], references: [id], onDelete: SetNull)
+  branch        Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([occurredAt])
+  @@map("asset_lifecycle_events")
+}
+
+model CustodyEvent {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  inventoryItemId String                  @map("inventory_item_id") @db.Uuid
+  branchId        String                  @map("branch_id") @db.Uuid
+  employeeId      String?                 @map("employee_id") @db.Uuid
+  action          String                  @db.VarChar(50)
+  reason          String?                 @db.Text
+  previousState   InventoryLifecycleStage @map("previous_state")
+  newState        InventoryLifecycleStage @map("new_state")
+  occurredAt      DateTime                @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  branch        Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  employee      Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([branchId])
+  @@index([occurredAt])
+  @@map("custody_events")
+}
+
+model InventoryLock {
+  id              String            @id @default(uuid()) @db.Uuid
+  tenantId        String            @map("tenant_id") @db.Uuid
+  inventoryItemId String            @map("inventory_item_id") @db.Uuid
+  lockType        InventoryLockType @map("lock_type")
+  reason          String?           @db.Text
+  referenceType   String?           @map("reference_type") @db.VarChar(50)
+  referenceId     String?           @map("reference_id") @db.Uuid
+  lockedById      String?           @map("locked_by_id") @db.Uuid
+  expiresAt       DateTime?         @map("expires_at") @db.Timestamptz(6)
+  releasedAt      DateTime?         @map("released_at") @db.Timestamptz(6)
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?         @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  lockedBy      Employee?     @relation(fields: [lockedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([lockType])
+  @@index([expiresAt])
+  @@map("inventory_locks")
+}
+
+model InventoryPriceHistory {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String             @map("tenant_id") @db.Uuid
+  inventoryItemId String             @map("inventory_item_id") @db.Uuid
+  priceType       InventoryPriceType @map("price_type")
+  amount          Decimal            @db.Decimal(18, 4)
+  currency        String             @default("SAR") @db.Char(3)
+  reason          String?            @db.Text
+  changedById     String?            @map("changed_by_id") @db.Uuid
+  effectiveAt     DateTime           @default(now()) @map("effective_at") @db.Timestamptz(6)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  changedBy     Employee?     @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([priceType])
+  @@index([effectiveAt])
+  @@map("inventory_price_history")
+}
+
+model InventoryWeightHistory {
+  id              String     @id @default(uuid()) @db.Uuid
+  tenantId        String     @map("tenant_id") @db.Uuid
+  inventoryItemId String     @map("inventory_item_id") @db.Uuid
+  grossWeight     Decimal?   @map("gross_weight") @db.Decimal(12, 4)
+  netWeight       Decimal?   @map("net_weight") @db.Decimal(12, 4)
+  stoneWeight     Decimal?   @map("stone_weight") @db.Decimal(12, 4)
+  goldWeight      Decimal?   @map("gold_weight") @db.Decimal(12, 4)
+  karat           GoldKarat?
+  reason          String?    @db.Text
+  measuredById    String?    @map("measured_by_id") @db.Uuid
+  measuredAt      DateTime   @default(now()) @map("measured_at") @db.Timestamptz(6)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  measuredBy    Employee?     @relation(fields: [measuredById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([measuredAt])
+  @@map("inventory_weight_history")
+}
+
+model InventoryAdjustment {
+  id            String                  @id @default(uuid()) @db.Uuid
+  tenantId      String                  @map("tenant_id") @db.Uuid
+  branchId      String                  @map("branch_id") @db.Uuid
+  adjustmentNo  String                  @map("adjustment_no") @db.VarChar(30)
+  reasonCode    AdjustmentReasonCode    @map("reason_code")
+  status        InventoryApprovalStatus @default(DRAFT)
+  notes         String?                 @db.Text
+  requestedById String?                 @map("requested_by_id") @db.Uuid
+  approvedById  String?                 @map("approved_by_id") @db.Uuid
+  approvedAt    DateTime?               @map("approved_at") @db.Timestamptz(6)
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  tenant      Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch      Branch                    @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  requestedBy Employee?                 @relation("AdjustmentRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy  Employee?                 @relation("AdjustmentApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines       InventoryAdjustmentLine[]
+  approvals   InventoryApproval[]
+
+  @@unique([tenantId, adjustmentNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([status])
+  @@map("inventory_adjustments")
+}
+
+model InventoryAdjustmentLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  adjustmentId    String    @map("adjustment_id") @db.Uuid
+  inventoryItemId String    @map("inventory_item_id") @db.Uuid
+  quantityDelta   Int       @default(0) @map("quantity_delta")
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  adjustment    InventoryAdjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem       @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([adjustmentId])
+  @@index([inventoryItemId])
+  @@map("inventory_adjustment_lines")
+}
+
+model StockCount {
+  id           String           @id @default(uuid()) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  branchId     String           @map("branch_id") @db.Uuid
+  countNo      String           @map("count_no") @db.VarChar(30)
+  status       StockCountStatus @default(DRAFT)
+  isCycleCount Boolean          @default(false) @map("is_cycle_count")
+  notes        String?          @db.Text
+  startedAt    DateTime?        @map("started_at") @db.Timestamptz(6)
+  completedAt  DateTime?        @map("completed_at") @db.Timestamptz(6)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  lines  StockCountLine[]
+
+  @@unique([tenantId, countNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([status])
+  @@map("stock_counts")
+}
+
+model StockCountLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  stockCountId    String    @map("stock_count_id") @db.Uuid
+  inventoryItemId String    @map("inventory_item_id") @db.Uuid
+  expectedQty     Int       @default(1) @map("expected_qty")
+  countedQty      Int?      @map("counted_qty")
+  variance        Int?
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  stockCount    StockCount    @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([stockCountId])
+  @@index([inventoryItemId])
+  @@map("stock_count_lines")
+}
+
+model InventoryApproval {
+  id            String                  @id @default(uuid()) @db.Uuid
+  tenantId      String                  @map("tenant_id") @db.Uuid
+  approvalType  InventoryApprovalType   @map("approval_type")
+  status        InventoryApprovalStatus @default(PENDING)
+  entityType    String                  @map("entity_type") @db.VarChar(50)
+  entityId      String                  @map("entity_id") @db.Uuid
+  transferId    String?                 @map("transfer_id") @db.Uuid
+  adjustmentId  String?                 @map("adjustment_id") @db.Uuid
+  requestedById String?                 @map("requested_by_id") @db.Uuid
+  approvedById  String?                 @map("approved_by_id") @db.Uuid
+  rejectedById  String?                 @map("rejected_by_id") @db.Uuid
+  reason        String?                 @db.Text
+  decidedAt     DateTime?               @map("decided_at") @db.Timestamptz(6)
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transfer    Transfer?            @relation(fields: [transferId], references: [id], onDelete: SetNull)
+  adjustment  InventoryAdjustment? @relation(fields: [adjustmentId], references: [id], onDelete: SetNull)
+  requestedBy Employee?            @relation("ApprovalRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy  Employee?            @relation("ApprovalApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy  Employee?            @relation("ApprovalRejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([status])
+  @@map("inventory_approvals")
+}
+
+model HardwareDeviceProfile {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  branchId   String?   @map("branch_id") @db.Uuid
+  deviceType String    @map("device_type") @db.VarChar(30)
+  name       String    @db.VarChar(100)
+  config     Json      @default("{}")
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("hardware_device_profiles")
+}

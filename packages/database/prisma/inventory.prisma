@@ -1,39 +1,60 @@
 // ─── Inventory Management ────────────────────────────────────────────────────
 
 model InventoryItem {
-  id                 String          @id @default(uuid()) @db.Uuid
-  tenantId           String          @map("tenant_id") @db.Uuid
-  branchId           String          @map("branch_id") @db.Uuid
-  productId          String          @map("product_id") @db.Uuid
-  inventoryLotId     String?         @map("inventory_lot_id") @db.Uuid
-  serialNumber       String          @map("serial_number") @db.VarChar(50)
-  barcode            String?         @db.VarChar(50)
-  status             InventoryStatus @default(AVAILABLE)
-  costPrice          Decimal?        @map("cost_price") @db.Decimal(18, 4)
-  sellingPrice       Decimal?        @map("selling_price") @db.Decimal(18, 4)
-  goldRateAtPurchase Decimal?        @map("gold_rate_at_purchase") @db.Decimal(12, 4)
-  weightActual       Decimal?        @map("weight_actual") @db.Decimal(12, 4)
-  location           String?         @db.VarChar(100)
-  metadata           Json            @default("{}")
-  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt          DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  id                 String                  @id @default(uuid()) @db.Uuid
+  tenantId           String                  @map("tenant_id") @db.Uuid
+  branchId           String                  @map("branch_id") @db.Uuid
+  productId          String                  @map("product_id") @db.Uuid
+  inventoryLotId     String?                 @map("inventory_lot_id") @db.Uuid
+  warehouseZoneId    String?                 @map("warehouse_zone_id") @db.Uuid
+  assetId            String                  @map("asset_id") @db.VarChar(50)
+  serialNumber       String                  @map("serial_number") @db.VarChar(50)
+  barcode            String?                 @db.VarChar(50)
+  qrCode             String?                 @map("qr_code") @db.VarChar(100)
+  rfidTag            String?                 @map("rfid_tag") @db.VarChar(100)
+  status             InventoryStatus         @default(AVAILABLE)
+  lifecycleStage     InventoryLifecycleStage @default(RECEIVED) @map("lifecycle_stage")
+  costPrice          Decimal?                @map("cost_price") @db.Decimal(18, 4)
+  sellingPrice       Decimal?                @map("selling_price") @db.Decimal(18, 4)
+  goldRateAtPurchase Decimal?                @map("gold_rate_at_purchase") @db.Decimal(12, 4)
+  weightActual       Decimal?                @map("weight_actual") @db.Decimal(12, 4)
+  location           String?                 @db.VarChar(100)
+  supplierId         String?                 @map("supplier_id") @db.Uuid
+  isLocked           Boolean                 @default(false) @map("is_locked")
+  metadata           Json                    @default("{}")
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt          DateTime?               @map("deleted_at") @db.Timestamptz(6)
 
-  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
-  inventoryLot   InventoryLot?   @relation(fields: [inventoryLotId], references: [id], onDelete: SetNull)
-  stockMovements StockMovement[]
-  transferLines  TransferLine[]
-  reservations   Reservation[]
-  invoiceItems   InvoiceItem[]
+  tenant          Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch          Branch                    @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  product         Product                   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryLot    InventoryLot?             @relation(fields: [inventoryLotId], references: [id], onDelete: SetNull)
+  warehouseZone   WarehouseZone?            @relation(fields: [warehouseZoneId], references: [id], onDelete: SetNull)
+  supplier        Supplier?                 @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  stockMovements  StockMovement[]
+  transferLines   TransferLine[]
+  reservations    Reservation[]
+  invoiceItems    InvoiceItem[]
+  lifecycleEvents AssetLifecycleEvent[]
+  custodyEvents   CustodyEvent[]
+  inventoryLocks  InventoryLock[]
+  priceHistory    InventoryPriceHistory[]
+  weightHistory   InventoryWeightHistory[]
+  adjustmentLines InventoryAdjustmentLine[]
+  stockCountLines StockCountLine[]
 
+  @@unique([tenantId, assetId])
   @@unique([tenantId, serialNumber])
   @@index([tenantId])
   @@index([branchId])
   @@index([productId])
+  @@index([warehouseZoneId])
   @@index([status])
+  @@index([lifecycleStage])
   @@index([barcode])
+  @@index([qrCode])
+  @@index([rfidTag])
   @@index([tenantId, deletedAt])
   @@map("inventory_items")
 }
@@ -65,11 +86,17 @@ model InventoryLot {
 model StockMovement {
   id              String            @id @default(uuid()) @db.Uuid
   tenantId        String            @map("tenant_id") @db.Uuid
+  branchId        String            @map("branch_id") @db.Uuid
   inventoryItemId String            @map("inventory_item_id") @db.Uuid
   type            StockMovementType
   quantity        Int               @default(1)
   referenceType   String?           @map("reference_type") @db.VarChar(50)
   referenceId     String?           @map("reference_id") @db.Uuid
+  performedById   String?           @map("performed_by_id") @db.Uuid
+  deviceId        String?           @map("device_id") @db.Uuid
+  reason          String?           @db.Text
+  previousState   Json?             @map("previous_state")
+  newState        Json?             @map("new_state")
   notes           String?           @db.Text
   occurredAt      DateTime          @default(now()) @map("occurred_at") @db.Timestamptz(6)
   createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -77,9 +104,12 @@ model StockMovement {
   deletedAt       DateTime?         @map("deleted_at") @db.Timestamptz(6)
 
   tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  performedBy   Employee?     @relation(fields: [performedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
+  @@index([branchId])
   @@index([inventoryItemId])
   @@index([type])
   @@index([occurredAt])
@@ -88,23 +118,33 @@ model StockMovement {
 }
 
 model Transfer {
-  id           String         @id @default(uuid()) @db.Uuid
-  tenantId     String         @map("tenant_id") @db.Uuid
-  transferNo   String         @map("transfer_no") @db.VarChar(30)
-  fromBranchId String         @map("from_branch_id") @db.Uuid
-  toBranchId   String         @map("to_branch_id") @db.Uuid
-  status       TransferStatus @default(DRAFT)
-  notes        String?        @db.Text
-  shippedAt    DateTime?      @map("shipped_at") @db.Timestamptz(6)
-  receivedAt   DateTime?      @map("received_at") @db.Timestamptz(6)
-  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  id              String         @id @default(uuid()) @db.Uuid
+  tenantId        String         @map("tenant_id") @db.Uuid
+  transferNo      String         @map("transfer_no") @db.VarChar(30)
+  fromBranchId    String         @map("from_branch_id") @db.Uuid
+  toBranchId      String         @map("to_branch_id") @db.Uuid
+  status          TransferStatus @default(DRAFT)
+  requestedById   String?        @map("requested_by_id") @db.Uuid
+  approvedById    String?        @map("approved_by_id") @db.Uuid
+  rejectedById    String?        @map("rejected_by_id") @db.Uuid
+  rejectionReason String?        @map("rejection_reason") @db.Text
+  notes           String?        @db.Text
+  shippedAt       DateTime?      @map("shipped_at") @db.Timestamptz(6)
+  receivedAt      DateTime?      @map("received_at") @db.Timestamptz(6)
+  approvedAt      DateTime?      @map("approved_at") @db.Timestamptz(6)
+  rejectedAt      DateTime?      @map("rejected_at") @db.Timestamptz(6)
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
-  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  fromBranch Branch         @relation("TransferFromBranch", fields: [fromBranchId], references: [id], onDelete: Restrict)
-  toBranch   Branch         @relation("TransferToBranch", fields: [toBranchId], references: [id], onDelete: Restrict)
-  lines      TransferLine[]
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  fromBranch  Branch              @relation("TransferFromBranch", fields: [fromBranchId], references: [id], onDelete: Restrict)
+  toBranch    Branch              @relation("TransferToBranch", fields: [toBranchId], references: [id], onDelete: Restrict)
+  requestedBy Employee?           @relation("TransferRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy  Employee?           @relation("TransferApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  rejectedBy  Employee?           @relation("TransferRejectedBy", fields: [rejectedById], references: [id], onDelete: SetNull)
+  lines       TransferLine[]
+  approvals   InventoryApproval[]
 
   @@unique([tenantId, transferNo])
   @@index([tenantId])

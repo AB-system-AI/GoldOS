@@ -114,6 +114,22 @@ model Tenant {
   supplierCategories        SupplierCategory[]
   supplierContacts          SupplierContact[]
   branchCurrencies          BranchCurrency[]
+  collections               Collection[]
+  productTags               ProductTag[]
+  productTagAssignments     ProductTagAssignment[]
+  productAttributes         ProductAttribute[]
+  productAttributeValues    ProductAttributeValue[]
+  skuSequences              SkuSequence[]
+  warehouseZones            WarehouseZone[]
+  assetLifecycleEvents      AssetLifecycleEvent[]
+  custodyEvents             CustodyEvent[]
+  inventoryLocks            InventoryLock[]
+  inventoryPriceHistory     InventoryPriceHistory[]
+  inventoryWeightHistory    InventoryWeightHistory[]
+  inventoryAdjustments      InventoryAdjustment[]
+  stockCounts               StockCount[]
+  inventoryApprovals        InventoryApproval[]
+  hardwareDeviceProfiles    HardwareDeviceProfile[]
 
   @@index([status])
   @@index([deletedAt])

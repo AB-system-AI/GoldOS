@@ -65,6 +65,7 @@ model Supplier {
   category       SupplierCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   contacts       SupplierContact[]
   purchaseOrders PurchaseOrder[]
+  inventoryItems InventoryItem[]
 
   @@unique([tenantId, supplierNo])
   @@index([tenantId])

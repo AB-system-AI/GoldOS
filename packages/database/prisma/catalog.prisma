@@ -51,6 +51,7 @@ model Product {
   tenantId          String            @map("tenant_id") @db.Uuid
   categoryId        String?           @map("category_id") @db.Uuid
   brandId           String?           @map("brand_id") @db.Uuid
+  collectionId      String?           @map("collection_id") @db.Uuid
   manufacturerId    String?           @map("manufacturer_id") @db.Uuid
   sku               String            @db.VarChar(50)
   name              String            @db.VarChar(255)
@@ -65,13 +66,16 @@ model Product {
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
 
-  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  brand              Brand?              @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  manufacturer       Manufacturer?       @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  tenant             Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category           Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand              Brand?                  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  collection         Collection?             @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  manufacturer       Manufacturer?           @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
   goldItem           GoldItem?
   diamondItem        DiamondItem?
   gemstone           Gemstone?
+  productTags        ProductTagAssignment[]
+  attributeValues    ProductAttributeValue[]
   inventoryItems     InventoryItem[]
   purchaseOrderLines PurchaseOrderLine[]
   salesOrderLines    SalesOrderLine[]
@@ -82,7 +86,9 @@ model Product {
   @@index([tenantId])
   @@index([categoryId])
   @@index([brandId])
+  @@index([collectionId])
   @@index([type])
+  @@index([barcode])
   @@index([tenantId, deletedAt])
   @@map("products")
 }
@@ -93,8 +99,13 @@ model GoldItem {
   karat       GoldKarat
   grossWeight Decimal   @map("gross_weight") @db.Decimal(12, 4)
   netWeight   Decimal   @map("net_weight") @db.Decimal(12, 4)
+  stoneWeight Decimal?  @map("stone_weight") @db.Decimal(12, 4)
+  goldWeight  Decimal?  @map("gold_weight") @db.Decimal(12, 4)
   purity      Decimal?  @db.Decimal(5, 2)
   hallmark    String?   @db.VarChar(50)
+  makingCost  Decimal?  @map("making_cost") @db.Decimal(18, 4)
+  stoneCost   Decimal?  @map("stone_cost") @db.Decimal(18, 4)
+  laborCost   Decimal?  @map("labor_cost") @db.Decimal(18, 4)
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
@@ -112,7 +123,9 @@ model DiamondItem {
   cut               DiamondCut?
   color             DiamondColor?
   clarity           DiamondClarity?
+  shape             DiamondShape?
   certificateNumber String?         @map("certificate_number") @db.VarChar(50)
+  lab               String?         @db.VarChar(50)
   fluorescence      String?         @db.VarChar(20)
   measurements      String?         @db.VarChar(50)
   createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -122,6 +135,7 @@ model DiamondItem {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([carat])
+  @@index([certificateNumber])
   @@map("diamond_items")
 }
 

@@ -68,6 +68,62 @@ export class EntityOwnershipRepository {
     });
   }
 
+  hasCategory(tenantId: string, id: string) {
+    return this.prisma.category.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasBrand(tenantId: string, id: string) {
+    return this.prisma.brand.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasProduct(tenantId: string, id: string) {
+    return this.prisma.product.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasCollection(tenantId: string, id: string) {
+    return this.prisma.collection.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasInventoryItem(tenantId: string, id: string) {
+    return this.prisma.inventoryItem.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasInventoryLot(tenantId: string, id: string) {
+    return this.prisma.inventoryLot.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasWarehouseZone(tenantId: string, id: string) {
+    return this.prisma.warehouseZone.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
+  hasProductTag(tenantId: string, id: string) {
+    return this.prisma.productTag.findFirst({
+      where: { id, ...tenantScope(tenantId) },
+      select: { id: true },
+    });
+  }
+
   async hasAddressable(tenantId: string, type: AddressableType, id: string) {
     switch (type) {
       case 'ORGANIZATION':

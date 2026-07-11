@@ -1,0 +1,27 @@
+import { parsePagination } from '@/lib/business/filters';
+import { withBusinessPermission } from '@/lib/business/handlers';
+import { getBusinessContainer } from '@/lib/di';
+import { getRequestId } from '@/lib/http/request';
+import { jsonError, jsonOk } from '@/lib/http/response';
+
+export const GET = withBusinessPermission(
+  'tenant.inventory.view',
+  async (request, auth, routeContext) => {
+    const requestId = getRequestId(request);
+    const { itemId } = await routeContext.params;
+
+    if (!itemId) {
+      return jsonError('VALIDATION_ERROR', 'Item ID required', requestId, { status: 400 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    const { inventoryItemService } = getBusinessContainer();
+
+    const events = await inventoryItemService.listCustodyEvents(auth.tenantId, itemId, {
+      ...pagination,
+    });
+
+    return jsonOk({ events }, requestId);
+  },
+);
