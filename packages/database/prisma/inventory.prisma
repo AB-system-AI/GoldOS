@@ -50,6 +50,7 @@ model InventoryItem {
   @@index([branchId])
   @@index([productId])
   @@index([warehouseZoneId])
+  @@index([supplierId])
   @@index([status])
   @@index([lifecycleStage])
   @@index([barcode])

@@ -31,31 +31,16 @@ export const PATCH = withBusinessPermission(
       return jsonError('VALIDATION_ERROR', 'Stock count ID required', requestId, { status: 400 });
     }
 
-    const body = (await request.json()) as { action?: string; line?: unknown };
+    const body: unknown = await request.json();
     const { stockCountService } = getBusinessContainer();
-    const context = buildAuditContext(request, auth);
+    const result = await stockCountService.handleAction(
+      auth.tenantId,
+      countId,
+      body,
+      buildAuditContext(request, auth),
+    );
 
-    switch (body.action) {
-      case 'start': {
-        const stockCount = await stockCountService.start(auth.tenantId, countId, context);
-        return jsonOk({ stockCount }, requestId);
-      }
-      case 'recordLine': {
-        const line = await stockCountService.recordLine(auth.tenantId, countId, body.line, context);
-        return jsonOk({ line }, requestId);
-      }
-      case 'complete': {
-        const stockCount = await stockCountService.complete(auth.tenantId, countId, context);
-        return jsonOk({ stockCount }, requestId);
-      }
-      default:
-        return jsonError(
-          'VALIDATION_ERROR',
-          'action must be one of: start, recordLine, complete',
-          requestId,
-          { status: 400 },
-        );
-    }
+    return jsonOk({ result }, requestId);
   },
 );
 

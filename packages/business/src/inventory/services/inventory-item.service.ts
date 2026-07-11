@@ -124,7 +124,6 @@ const updateItemSchema = z.object({
   barcode: z.string().max(50).optional().nullable(),
   qrCode: z.string().max(100).optional().nullable(),
   rfidTag: z.string().max(100).optional().nullable(),
-  sellingPrice: z.number().optional().nullable(),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -188,6 +187,13 @@ export class InventoryItemService {
       await assertTenantRef(
         () => this.entityOwnershipRepository.hasWarehouseZone(tenantId, warehouseZoneId),
         'Warehouse zone not found in tenant',
+      );
+    }
+    if (data.supplierId) {
+      const supplierId = data.supplierId;
+      await assertTenantRef(
+        () => this.entityOwnershipRepository.hasSupplier(tenantId, supplierId),
+        'Supplier not found in tenant',
       );
     }
 
@@ -299,6 +305,13 @@ export class InventoryItemService {
       () => this.entityOwnershipRepository.hasBranch(tenantId, data.branchId),
       'Branch not found in tenant',
     );
+    if (data.employeeId) {
+      const employeeId = data.employeeId;
+      await assertTenantRef(
+        () => this.entityOwnershipRepository.hasEmployee(tenantId, employeeId),
+        'Employee not found in tenant',
+      );
+    }
 
     const event = await this.custodyEventRepository.create(tenantId, {
       inventoryItem: { connect: { id } },
@@ -338,6 +351,14 @@ export class InventoryItemService {
     );
     const data = parseInput(priceHistorySchema, input);
 
+    if (data.changedById) {
+      const changedById = data.changedById;
+      await assertTenantRef(
+        () => this.entityOwnershipRepository.hasEmployee(tenantId, changedById),
+        'Employee not found in tenant',
+      );
+    }
+
     const entry = await this.priceHistoryRepository.create(tenantId, {
       inventoryItem: { connect: { id } },
       priceType: data.priceType,
@@ -371,6 +392,14 @@ export class InventoryItemService {
       'Inventory item not found',
     );
     const data = parseInput(weightHistorySchema, input);
+
+    if (data.measuredById) {
+      const measuredById = data.measuredById;
+      await assertTenantRef(
+        () => this.entityOwnershipRepository.hasEmployee(tenantId, measuredById),
+        'Employee not found in tenant',
+      );
+    }
 
     const entry = await this.weightHistoryRepository.create(tenantId, {
       inventoryItem: { connect: { id } },
@@ -488,6 +517,19 @@ export class InventoryItemService {
       );
     }
 
+    if (data.barcode) {
+      const existingBarcode = await this.inventoryItemRepository.findByBarcode(
+        tenantId,
+        data.barcode,
+      );
+      if (existingBarcode && existingBarcode.id !== id) {
+        throw new BusinessError(
+          BusinessErrorCodes.ALREADY_EXISTS,
+          'Barcode already assigned to another item',
+        );
+      }
+    }
+
     const updated = await assertFound(
       this.inventoryItemRepository.update(tenantId, id, {
         ...(data.warehouseZoneId !== undefined
@@ -501,7 +543,6 @@ export class InventoryItemService {
         ...(data.barcode !== undefined ? { barcode: data.barcode } : {}),
         ...(data.qrCode !== undefined ? { qrCode: data.qrCode } : {}),
         ...(data.rfidTag !== undefined ? { rfidTag: data.rfidTag } : {}),
-        ...(data.sellingPrice !== undefined ? { sellingPrice: data.sellingPrice } : {}),
         ...(data.metadata !== undefined ? { metadata: asJsonOptional(data.metadata) } : {}),
       }),
       'Inventory item not found',
@@ -525,6 +566,19 @@ export class InventoryItemService {
       this.inventoryItemRepository.findById(tenantId, id),
       'Inventory item not found',
     );
+
+    const deletableStages = new Set(['RECEIVED', 'AVAILABLE', 'ARCHIVED']);
+    if (!deletableStages.has(existing.lifecycleStage)) {
+      throw new BusinessError(
+        BusinessErrorCodes.CONFLICT,
+        'Inventory item cannot be deleted in its current lifecycle stage',
+      );
+    }
+
+    if (await this.lockEngine.isLocked(tenantId, id)) {
+      throw new BusinessError(BusinessErrorCodes.CONFLICT, 'Inventory item is locked');
+    }
+
     await this.inventoryItemRepository.softDelete(tenantId, id);
     await this.auditService.log({
       tenantId,

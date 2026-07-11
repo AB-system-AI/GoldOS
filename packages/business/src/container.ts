@@ -273,6 +273,7 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
     entityOwnershipRepository,
     skuGenerator,
     movementEngine,
+    lifecycleEngine,
     auditService,
   );
   const stockCountService = new StockCountService(

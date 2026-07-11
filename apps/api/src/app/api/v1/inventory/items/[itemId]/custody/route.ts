@@ -1,3 +1,4 @@
+import { buildAuditContext } from '@/lib/business/context';
 import { parsePagination } from '@/lib/business/filters';
 import { withBusinessPermission } from '@/lib/business/handlers';
 import { getBusinessContainer } from '@/lib/di';
@@ -23,5 +24,29 @@ export const GET = withBusinessPermission(
     });
 
     return jsonOk({ events }, requestId);
+  },
+);
+
+export const POST = withBusinessPermission(
+  'tenant.inventory.update',
+  async (request, auth, routeContext) => {
+    const requestId = getRequestId(request);
+    const { itemId } = await routeContext.params;
+
+    if (!itemId) {
+      return jsonError('VALIDATION_ERROR', 'Item ID required', requestId, { status: 400 });
+    }
+
+    const body: unknown = await request.json();
+    const { inventoryItemService } = getBusinessContainer();
+
+    const event = await inventoryItemService.recordCustody(
+      auth.tenantId,
+      itemId,
+      body,
+      buildAuditContext(request, auth),
+    );
+
+    return jsonOk({ event }, requestId, { status: 201 });
   },
 );

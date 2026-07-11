@@ -50,6 +50,16 @@ export class ReservationRepository {
     });
   }
 
+  countActiveForItem(tenantId: string, inventoryItemId: string) {
+    return this.prisma.reservation.count({
+      where: {
+        ...tenantScope(tenantId),
+        inventoryItemId,
+        status: 'ACTIVE',
+      },
+    });
+  }
+
   listExpiredActive(tenantId: string, asOf: Date = new Date()) {
     return this.prisma.reservation.findMany({
       where: {

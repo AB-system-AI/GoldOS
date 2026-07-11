@@ -83,6 +83,15 @@ export class TransferService {
           'Inventory item does not belong to source branch',
         );
       }
+      if (item.lifecycleStage !== 'AVAILABLE') {
+        throw new BusinessError(
+          BusinessErrorCodes.CONFLICT,
+          'Only available inventory items can be transferred',
+        );
+      }
+      if (await this.lockEngine.isLocked(tenantId, line.inventoryItemId)) {
+        throw new BusinessError(BusinessErrorCodes.CONFLICT, 'Inventory item is locked');
+      }
     }
 
     const transferNo =
@@ -339,6 +348,13 @@ export class TransferService {
 
   async delete(tenantId: string, id: string, context?: AuditContext) {
     const existing = await this.getById(tenantId, id);
+    if (!['DRAFT', 'REJECTED'].includes(existing.status)) {
+      throw new BusinessError(
+        BusinessErrorCodes.CONFLICT,
+        'Only draft or rejected transfers can be deleted',
+      );
+    }
+
     await this.transferRepository.softDelete(tenantId, id);
     await this.auditService.log({
       tenantId,

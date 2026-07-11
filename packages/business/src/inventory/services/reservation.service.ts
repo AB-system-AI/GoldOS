@@ -69,6 +69,28 @@ export class ReservationService {
       );
     }
 
+    if (item.lifecycleStage !== 'AVAILABLE') {
+      throw new BusinessError(
+        BusinessErrorCodes.CONFLICT,
+        'Inventory item is not available for reservation',
+      );
+    }
+
+    if (await this.lockEngine.isLocked(tenantId, data.inventoryItemId)) {
+      throw new BusinessError(BusinessErrorCodes.CONFLICT, 'Inventory item is locked');
+    }
+
+    const activeReservations = await this.reservationRepository.countActiveForItem(
+      tenantId,
+      data.inventoryItemId,
+    );
+    if (activeReservations > 0) {
+      throw new BusinessError(
+        BusinessErrorCodes.CONFLICT,
+        'Inventory item already has an active reservation',
+      );
+    }
+
     const reservationNo =
       data.reservationNo ??
       (await this.skuGenerator.next(tenantId, { prefix: 'RSV', productType: 'RESERVATION' }));
@@ -216,6 +238,16 @@ export class ReservationService {
         reason: 'Auto-expired reservation',
         performedById: context?.userId ?? null,
         auditContext: context,
+      });
+
+      await this.auditService.log({
+        tenantId,
+        action: 'UPDATE',
+        entityType: 'reservation',
+        entityId: reservation.id,
+        oldValues: reservation,
+        newValues: { status: 'EXPIRED' },
+        context,
       });
 
       results.push(reservation.id);

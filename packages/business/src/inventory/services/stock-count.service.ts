@@ -22,6 +22,11 @@ const recordLineSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+const stockCountActionSchema = z.object({
+  action: z.enum(['start', 'recordLine', 'complete']),
+  line: recordLineSchema.optional(),
+});
+
 export class StockCountService {
   constructor(
     private readonly stockCountRepository: StockCountRepository,
@@ -58,6 +63,19 @@ export class StockCountService {
         take: 500,
       });
       itemIds = items.map((item) => item.id);
+    } else {
+      for (const inventoryItemId of itemIds) {
+        const item = await assertFound(
+          this.inventoryItemRepository.findById(tenantId, inventoryItemId),
+          'Inventory item not found',
+        );
+        if (item.branchId !== data.branchId) {
+          throw new BusinessError(
+            BusinessErrorCodes.TENANT_MISMATCH,
+            'Inventory item does not belong to the specified branch',
+          );
+        }
+      }
     }
 
     const stockCount = await this.stockCountRepository.create(tenantId, {
@@ -174,8 +192,27 @@ export class StockCountService {
     return stockCount;
   }
 
+  async handleAction(tenantId: string, id: string, input: unknown, context?: AuditContext) {
+    const data = parseInput(stockCountActionSchema, input);
+
+    switch (data.action) {
+      case 'start':
+        return this.start(tenantId, id, context);
+      case 'recordLine':
+        return this.recordLine(tenantId, id, data.line, context);
+      case 'complete':
+        return this.complete(tenantId, id, context);
+    }
+  }
+
   async delete(tenantId: string, id: string, context?: AuditContext) {
     const existing = await this.getById(tenantId, id);
+    if (existing.status !== 'DRAFT') {
+      throw new BusinessError(
+        BusinessErrorCodes.CONFLICT,
+        'Only draft stock counts can be deleted',
+      );
+    }
     await this.stockCountRepository.softDelete(tenantId, id);
     await this.auditService.log({
       tenantId,

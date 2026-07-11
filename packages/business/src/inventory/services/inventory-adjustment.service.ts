@@ -4,6 +4,7 @@ import type { AuditContext, AuditService } from '../../services/audit.service.js
 import { assertFound, assertTenantRef, parseInput } from '../../services/validation.js';
 import { BusinessError, BusinessErrorCodes } from '../../errors/business-error.js';
 import type { EntityOwnershipRepository } from '../../repositories/entity-ownership.repository.js';
+import type { LifecycleEngine } from '../engines/lifecycle.engine.js';
 import type { MovementEngine } from '../engines/movement.engine.js';
 import type { SkuGenerator } from '../engines/sku-generator.js';
 import type { InventoryAdjustmentRepository } from '../repositories/inventory-adjustment.repository.js';
@@ -33,6 +34,7 @@ export class InventoryAdjustmentService {
     private readonly entityOwnershipRepository: EntityOwnershipRepository,
     private readonly skuGenerator: SkuGenerator,
     private readonly movementEngine: MovementEngine,
+    private readonly lifecycleEngine: LifecycleEngine,
     private readonly auditService: AuditService,
   ) {}
 
@@ -159,8 +161,18 @@ export class InventoryAdjustmentService {
       });
 
       if (line.quantityDelta < 0) {
-        await this.inventoryItemRepository.update(tenantId, line.inventoryItemId, {
-          status: 'DAMAGED',
+        const toStage =
+          existing.reasonCode === 'LOSS' || existing.reasonCode === 'THEFT' ? 'LOST' : 'DAMAGED';
+
+        await this.lifecycleEngine.transition({
+          tenantId,
+          inventoryItemId: line.inventoryItemId,
+          toStage,
+          toStatus: toStage === 'LOST' ? 'QUARANTINE' : 'DAMAGED',
+          reason: `Adjustment ${existing.adjustmentNo}: ${existing.reasonCode}`,
+          branchId: existing.branchId,
+          performedById: approverId ?? null,
+          skipLockCheck: true,
         });
       }
     }
@@ -189,6 +201,9 @@ export class InventoryAdjustmentService {
 
   async delete(tenantId: string, id: string, context?: AuditContext) {
     const existing = await this.getById(tenantId, id);
+    if (existing.status !== 'DRAFT') {
+      throw new BusinessError(BusinessErrorCodes.CONFLICT, 'Only draft adjustments can be deleted');
+    }
     await this.inventoryAdjustmentRepository.softDelete(tenantId, id);
     await this.auditService.log({
       tenantId,

@@ -40,6 +40,14 @@ export class LockEngine {
       throw new BusinessError(BusinessErrorCodes.NOT_FOUND, 'Inventory item not found');
     }
 
+    const activeLocks = await this.inventoryLockRepository.countActive(
+      params.tenantId,
+      params.inventoryItemId,
+    );
+    if (activeLocks > 0) {
+      throw new BusinessError(BusinessErrorCodes.CONFLICT, 'Inventory item is already locked');
+    }
+
     const lock = await this.inventoryLockRepository.create(params.tenantId, {
       inventoryItem: { connect: { id: params.inventoryItemId } },
       lockType: params.lockType,
