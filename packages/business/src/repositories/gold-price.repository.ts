@@ -146,4 +146,24 @@ export class GoldPriceRepository {
       orderBy: { priority: 'asc' },
     });
   }
+
+  async listInventoryWeightByKarat(tenantId: string, karat: GoldKarat) {
+    const items = await this.prisma.inventoryItem.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: { in: ['AVAILABLE', 'RESERVED'] },
+        product: { goldItem: { karat } },
+      },
+      select: {
+        weightActual: true,
+        product: { select: { goldItem: { select: { netWeight: true } } } },
+      },
+      take: 5000,
+    });
+
+    return items.map((item) => ({
+      weight: Number(item.weightActual ?? item.product.goldItem?.netWeight ?? 0),
+    }));
+  }
 }

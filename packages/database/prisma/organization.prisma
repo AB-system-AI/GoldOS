@@ -55,6 +55,25 @@ model Branch {
   inventoryAdjustments   InventoryAdjustment[]
   stockCounts            StockCount[]
   hardwareDeviceProfiles HardwareDeviceProfile[]
+  posSessions            PosSession[]
+  salesReturns           SalesReturn[]
+  salesExchanges         SalesExchange[]
+  buybackTransactions    BuybackTransaction[]
+  payments               Payment[]
+  salesDocumentSequences SalesDocumentSequence[]
+  discountApprovals      DiscountApproval[]
+  invoiceTemplates       InvoiceTemplate[]
+  cashierQueueEntries    CashierQueueEntry[]
+  manualPriceOverrides   ManualPriceOverride[]
+  salesEventLogs         SalesEventLog[]
+  chartOfAccounts        ChartOfAccount[]
+  journalEntries         JournalEntry[]
+  accountBalances        AccountBalance[]
+  cashRegisterShifts     CashRegisterShift[]
+  cashMovements          CashMovement[]
+  customerLedgerEntries  CustomerLedgerEntry[]
+  supplierLedgerEntries  SupplierLedgerEntry[]
+  expenses               Expense[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -87,33 +106,60 @@ model Employee {
   updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
-  tenant               Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch               Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  user                 User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  manager              Employee?                  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
-  directReports        Employee[]                 @relation("EmployeeManager")
-  departmentRef        Department?                @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  jobTitleRef          JobTitle?                  @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
-  photoFile            File?                      @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
-  invitations          EmployeeInvitation[]
-  employeeBranches     EmployeeBranch[]
-  employmentHistory    EmploymentHistory[]
-  emergencyContacts    EmployeeEmergencyContact[]
-  managedBranches      Branch[]                   @relation("BranchManager")
-  stockMovements       StockMovement[]
-  transfersRequested   Transfer[]                 @relation("TransferRequestedBy")
-  transfersApproved    Transfer[]                 @relation("TransferApprovedBy")
-  transfersRejected    Transfer[]                 @relation("TransferRejectedBy")
-  lifecycleEvents      AssetLifecycleEvent[]
-  custodyEvents        CustodyEvent[]
-  inventoryLocks       InventoryLock[]
-  priceChanges         InventoryPriceHistory[]
-  weightChanges        InventoryWeightHistory[]
-  adjustmentsRequested InventoryAdjustment[]      @relation("AdjustmentRequestedBy")
-  adjustmentsApproved  InventoryAdjustment[]      @relation("AdjustmentApprovedBy")
-  approvalsRequested   InventoryApproval[]        @relation("ApprovalRequestedBy")
-  approvalsApproved    InventoryApproval[]        @relation("ApprovalApprovedBy")
-  approvalsRejected    InventoryApproval[]        @relation("ApprovalRejectedBy")
+  tenant                     Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch                     Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  user                       User?                      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  manager                    Employee?                  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports              Employee[]                 @relation("EmployeeManager")
+  departmentRef              Department?                @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  jobTitleRef                JobTitle?                  @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
+  photoFile                  File?                      @relation(fields: [photoFileId], references: [id], onDelete: SetNull)
+  invitations                EmployeeInvitation[]
+  employeeBranches           EmployeeBranch[]
+  employmentHistory          EmploymentHistory[]
+  emergencyContacts          EmployeeEmergencyContact[]
+  managedBranches            Branch[]                   @relation("BranchManager")
+  stockMovements             StockMovement[]
+  transfersRequested         Transfer[]                 @relation("TransferRequestedBy")
+  transfersApproved          Transfer[]                 @relation("TransferApprovedBy")
+  transfersRejected          Transfer[]                 @relation("TransferRejectedBy")
+  lifecycleEvents            AssetLifecycleEvent[]
+  custodyEvents              CustodyEvent[]
+  inventoryLocks             InventoryLock[]
+  priceChanges               InventoryPriceHistory[]
+  weightChanges              InventoryWeightHistory[]
+  adjustmentsRequested       InventoryAdjustment[]      @relation("AdjustmentRequestedBy")
+  adjustmentsApproved        InventoryAdjustment[]      @relation("AdjustmentApprovedBy")
+  approvalsRequested         InventoryApproval[]        @relation("ApprovalRequestedBy")
+  approvalsApproved          InventoryApproval[]        @relation("ApprovalApprovedBy")
+  approvalsRejected          InventoryApproval[]        @relation("ApprovalRejectedBy")
+  salesOrders                SalesOrder[]
+  invoices                   Invoice[]
+  payments                   Payment[]
+  posSessions                PosSession[]
+  salesReturns               SalesReturn[]              @relation("SalesReturnEmployee")
+  salesReturnsApproved       SalesReturn[]              @relation("SalesReturnApprover")
+  salesExchanges             SalesExchange[]            @relation("SalesExchangeEmployee")
+  salesExchangesApproved     SalesExchange[]            @relation("SalesExchangeApprover")
+  buybacks                   BuybackTransaction[]       @relation("BuybackEmployee")
+  buybacksApproved           BuybackTransaction[]       @relation("BuybackApprover")
+  discountApprovalsRequested DiscountApproval[]         @relation("DiscountApprovalRequester")
+  discountApprovalsApproved  DiscountApproval[]         @relation("DiscountApprovalApprover")
+  salesOrdersSeller          SalesOrder[]               @relation("SalesOrderSeller")
+  salesOrdersCashier         SalesOrder[]               @relation("SalesOrderCashier")
+  invoicesCashier            Invoice[]                  @relation("InvoiceCashier")
+  queueEntriesSeller         CashierQueueEntry[]        @relation("QueueSeller")
+  queueEntriesCashier        CashierQueueEntry[]        @relation("QueueCashier")
+  manualOverrides            ManualPriceOverride[]      @relation("ManualOverrideCreator")
+  journalsCreated            JournalEntry[]             @relation("JournalCreatedBy")
+  journalsPosted             JournalEntry[]             @relation("JournalPostedBy")
+  journalsReversed           JournalEntry[]             @relation("JournalReversedBy")
+  periodsClosed              AccountingPeriod[]         @relation("PeriodClosedBy")
+  cashRegisterShifts         CashRegisterShift[]
+  cashMovementsFrom          CashMovement[]             @relation("CashMovementFrom")
+  cashMovementsTo            CashMovement[]             @relation("CashMovementTo")
+  expensesApproved           Expense[]                  @relation("ExpenseApprover")
+  bankReconciliations        BankReconciliation[]
 
   @@unique([tenantId, employeeNo])
   @@index([tenantId])

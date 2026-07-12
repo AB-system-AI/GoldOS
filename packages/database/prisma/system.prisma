@@ -16,14 +16,15 @@ model File {
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(6)
 
-  tenant        Tenant?        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  organizations Organization[]
-  brands        Brand[]
-  certificates  Certificate[]
-  media         Media[]
-  attachments   Attachment[]
-  backups       Backup[]
-  employees     Employee[]
+  tenant           Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  organizations    Organization[]
+  brands           Brand[]
+  certificates     Certificate[]
+  media            Media[]
+  attachments      Attachment[]
+  backups          Backup[]
+  employees        Employee[]
+  invoiceTemplates InvoiceTemplate[]
 
   @@index([tenantId])
   @@index([key])

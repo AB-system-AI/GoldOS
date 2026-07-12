@@ -1,42 +1,61 @@
 // ─── Invoicing & Payments ────────────────────────────────────────────────────
 
 model Invoice {
-  id               String        @id @default(uuid()) @db.Uuid
-  tenantId         String        @map("tenant_id") @db.Uuid
-  branchId         String        @map("branch_id") @db.Uuid
-  customerId       String?       @map("customer_id") @db.Uuid
-  salesOrderId     String?       @map("sales_order_id") @db.Uuid
-  invoiceNo        String        @map("invoice_no") @db.VarChar(30)
-  type             InvoiceType   @default(SALE)
-  status           InvoiceStatus @default(DRAFT)
-  paymentStatus    PaymentStatus @default(UNPAID) @map("payment_status")
-  currency         String        @default("SAR") @db.Char(3)
-  subtotal         Decimal       @default(0) @db.Decimal(18, 4)
-  discountAmount   Decimal       @default(0) @map("discount_amount") @db.Decimal(18, 4)
-  taxAmount        Decimal       @default(0) @map("tax_amount") @db.Decimal(18, 4)
-  totalAmount      Decimal       @default(0) @map("total_amount") @db.Decimal(18, 4)
-  goldRateSnapshot Json?         @map("gold_rate_snapshot")
-  zatcaStatus      String?       @map("zatca_status") @db.VarChar(20)
-  zatcaUuid        String?       @map("zatca_uuid") @db.Uuid
-  zatcaHash        String?       @map("zatca_hash") @db.VarChar(255)
-  notes            String?       @db.Text
-  issuedAt         DateTime?     @map("issued_at") @db.Timestamptz(6)
-  voidedAt         DateTime?     @map("voided_at") @db.Timestamptz(6)
-  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt        DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id                   String        @id @default(uuid()) @db.Uuid
+  tenantId             String        @map("tenant_id") @db.Uuid
+  branchId             String        @map("branch_id") @db.Uuid
+  customerId           String?       @map("customer_id") @db.Uuid
+  salesOrderId         String?       @map("sales_order_id") @db.Uuid
+  employeeId           String?       @map("employee_id") @db.Uuid
+  cashierEmployeeId    String?       @map("cashier_employee_id") @db.Uuid
+  invoiceNo            String        @map("invoice_no") @db.VarChar(30)
+  qrCode               String?       @map("qr_code") @db.VarChar(255)
+  barcode              String?       @db.VarChar(100)
+  type                 InvoiceType   @default(SALE)
+  status               InvoiceStatus @default(DRAFT)
+  paymentStatus        PaymentStatus @default(UNPAID) @map("payment_status")
+  currency             String        @default("SAR") @db.Char(3)
+  subtotal             Decimal       @default(0) @db.Decimal(18, 4)
+  discountAmount       Decimal       @default(0) @map("discount_amount") @db.Decimal(18, 4)
+  taxAmount            Decimal       @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount          Decimal       @default(0) @map("total_amount") @db.Decimal(18, 4)
+  amountPaid           Decimal       @default(0) @map("amount_paid") @db.Decimal(18, 4)
+  amountDue            Decimal       @default(0) @map("amount_due") @db.Decimal(18, 4)
+  goldRateSnapshot     Json?         @map("gold_rate_snapshot")
+  exchangeRateSnapshot Json?         @map("exchange_rate_snapshot")
+  pricingSnapshot      Json?         @map("pricing_snapshot")
+  zatcaStatus          String?       @map("zatca_status") @db.VarChar(20)
+  zatcaUuid            String?       @map("zatca_uuid") @db.Uuid
+  zatcaHash            String?       @map("zatca_hash") @db.VarChar(255)
+  notes                String?       @db.Text
+  issuedAt             DateTime?     @map("issued_at") @db.Timestamptz(6)
+  voidedAt             DateTime?     @map("voided_at") @db.Timestamptz(6)
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch     Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  customer   Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  salesOrder SalesOrder?   @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
-  items      InvoiceItem[]
-  payments   Payment[]
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch            Branch          @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer          Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  salesOrder        SalesOrder?     @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
+  employee          Employee?       @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  cashier           Employee?       @relation("InvoiceCashier", fields: [cashierEmployeeId], references: [id], onDelete: SetNull)
+  items             InvoiceItem[]
+  payments          Payment[]
+  salesReturns      SalesReturn[]
+  exchangesOriginal SalesExchange[] @relation("ExchangeOriginalInvoice")
+  exchangesNew      SalesExchange[] @relation("ExchangeNewInvoice")
+  journalEntryId    String?         @map("journal_entry_id") @db.Uuid
 
   @@unique([tenantId, branchId, invoiceNo])
   @@index([tenantId])
   @@index([customerId])
+  @@index([employeeId])
+  @@index([cashierEmployeeId])
+  @@index([qrCode])
+  @@index([barcode])
   @@index([status])
+  @@index([paymentStatus])
   @@index([issuedAt])
   @@index([tenantId, deletedAt])
   @@map("invoices")
@@ -61,9 +80,11 @@ model InvoiceItem {
   updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?  @map("deleted_at") @db.Timestamptz(6)
 
-  invoice       Invoice        @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  product       Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
-  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  invoice       Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product       Product?            @relation(fields: [productId], references: [id], onDelete: SetNull)
+  inventoryItem InventoryItem?      @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  returnLines   SalesReturnLine[]
+  exchangeLines SalesExchangeLine[]
 
   @@unique([invoiceId, lineNo])
   @@index([invoiceId])
@@ -72,51 +93,68 @@ model InvoiceItem {
 }
 
 model Payment {
-  id        String        @id @default(uuid()) @db.Uuid
-  tenantId  String        @map("tenant_id") @db.Uuid
-  invoiceId String        @map("invoice_id") @db.Uuid
-  paymentNo String        @map("payment_no") @db.VarChar(30)
-  method    PaymentMethod
-  status    PaymentStatus @default(PAID)
-  amount    Decimal       @db.Decimal(18, 4)
-  currency  String        @default("SAR") @db.Char(3)
-  reference String?       @db.VarChar(100)
-  paidAt    DateTime      @map("paid_at") @db.Timestamptz(6)
-  notes     String?       @db.Text
-  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id         String        @id @default(uuid()) @db.Uuid
+  tenantId   String        @map("tenant_id") @db.Uuid
+  branchId   String?       @map("branch_id") @db.Uuid
+  invoiceId  String        @map("invoice_id") @db.Uuid
+  employeeId String?       @map("employee_id") @db.Uuid
+  paymentNo  String        @map("payment_no") @db.VarChar(30)
+  method     PaymentMethod
+  status     PaymentStatus @default(PAID)
+  amount     Decimal       @db.Decimal(18, 4)
+  currency   String        @default("SAR") @db.Char(3)
+  reference  String?       @db.VarChar(100)
+  paidAt     DateTime      @map("paid_at") @db.Timestamptz(6)
+  notes      String?       @db.Text
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch   Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  invoice  Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, paymentNo])
   @@index([tenantId])
+  @@index([branchId])
   @@index([invoiceId])
   @@index([paidAt])
   @@map("payments")
 }
 
 model Expense {
-  id          String        @id @default(uuid()) @db.Uuid
-  tenantId    String        @map("tenant_id") @db.Uuid
-  expenseNo   String        @map("expense_no") @db.VarChar(30)
-  category    String        @db.VarChar(50)
-  status      ExpenseStatus @default(DRAFT)
-  amount      Decimal       @db.Decimal(18, 4)
-  currency    String        @default("SAR") @db.Char(3)
-  description String        @db.Text
-  expenseDate DateTime      @map("expense_date") @db.Date
-  reference   String?       @db.VarChar(100)
-  metadata    Json          @default("{}")
-  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id             String         @id @default(uuid()) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  branchId       String?        @map("branch_id") @db.Uuid
+  categoryId     String?        @map("category_id") @db.Uuid
+  expenseNo      String         @map("expense_no") @db.VarChar(30)
+  category       String         @db.VarChar(50)
+  status         ExpenseStatus  @default(DRAFT)
+  amount         Decimal        @db.Decimal(18, 4)
+  currency       String         @default("SAR") @db.Char(3)
+  description    String         @db.Text
+  expenseDate    DateTime       @map("expense_date") @db.Date
+  paymentMethod  PaymentMethod? @map("payment_method")
+  approvedById   String?        @map("approved_by_id") @db.Uuid
+  approvedAt     DateTime?      @map("approved_at") @db.Timestamptz(6)
+  journalEntryId String?        @map("journal_entry_id") @db.Uuid
+  reference      String?        @db.VarChar(100)
+  metadata       Json           @default("{}")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?      @map("deleted_at") @db.Timestamptz(6)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch          Branch?          @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  expenseCategory ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  approver        Employee?        @relation("ExpenseApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  journalEntry    JournalEntry?    @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
 
   @@unique([tenantId, expenseNo])
   @@index([tenantId])
+  @@index([branchId])
+  @@index([categoryId])
   @@index([status])
   @@index([expenseDate])
   @@map("expenses")

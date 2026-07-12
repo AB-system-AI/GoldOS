@@ -15,7 +15,10 @@ const createCustomerSchema = z.object({
   phone: z.string().min(1).max(30),
   phoneSecondary: z.string().max(30).optional().nullable(),
   idNumber: z.string().max(50).optional().nullable(),
+  nationalId: z.string().max(50).optional().nullable(),
+  passportNumber: z.string().max(50).optional().nullable(),
   taxNumber: z.string().max(50).optional().nullable(),
+  commercialRegistration: z.string().max(50).optional().nullable(),
   tier: z.string().max(20).optional(),
   isWalkIn: z.boolean().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'BLOCKED']).optional(),
@@ -25,6 +28,14 @@ const createCustomerSchema = z.object({
 });
 
 const updateCustomerSchema = createCustomerSchema.partial().omit({ customerNo: true });
+
+function resolveNationalId(data: {
+  nationalId?: string | null;
+  idNumber?: string | null;
+}): string | null {
+  const nationalId = data.nationalId?.trim() ?? data.idNumber?.trim() ?? null;
+  return nationalId && nationalId.length > 0 ? nationalId : null;
+}
 
 const phoneSchema = z.object({
   phone: z.string().min(1).max(30),
@@ -69,8 +80,11 @@ export class CustomerService {
       email: data.email ?? null,
       phone: data.phone,
       phoneSecondary: data.phoneSecondary ?? null,
-      idNumber: data.idNumber ?? null,
-      taxNumber: data.taxNumber ?? null,
+      idNumber: resolveNationalId(data),
+      nationalId: resolveNationalId(data),
+      passportNumber: data.passportNumber?.trim() ?? null,
+      taxNumber: data.taxNumber?.trim() ?? null,
+      commercialRegistration: data.commercialRegistration?.trim() ?? null,
       tier: data.tier,
       isWalkIn: data.isWalkIn,
       status: data.status,
@@ -105,8 +119,15 @@ export class CustomerService {
       email: data.email,
       phone: data.phone,
       phoneSecondary: data.phoneSecondary,
-      idNumber: data.idNumber,
-      taxNumber: data.taxNumber,
+      ...(data.idNumber !== undefined || data.nationalId !== undefined
+        ? {
+            idNumber: resolveNationalId(data),
+            nationalId: resolveNationalId(data),
+          }
+        : {}),
+      passportNumber: data.passportNumber?.trim() ?? data.passportNumber,
+      taxNumber: data.taxNumber?.trim() ?? data.taxNumber,
+      commercialRegistration: data.commercialRegistration?.trim() ?? data.commercialRegistration,
       tier: data.tier,
       isWalkIn: data.isWalkIn,
       status: data.status,

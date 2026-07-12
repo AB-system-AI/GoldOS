@@ -3,7 +3,13 @@ const MODULES = [
   'users',
   'inventory',
   'sales',
+  'exchange',
+  'accounting',
   'finance',
+  'invoice',
+  'payment',
+  'buyback',
+  'pos',
   'hr',
   'settings',
   'organization',
@@ -19,10 +25,43 @@ const ACTIONS = [
   'update',
   'delete',
   'approve',
+  'cancel',
+  'return',
+  'discount',
+  'complete',
   'export',
   'print',
   'manage',
   'admin',
+  'post',
+  'close',
+];
+
+const EXTRA_PERMISSIONS = [
+  {
+    code: 'tenant.finance.cash.manage',
+    name: 'Finance Cash Manage',
+    module: 'finance',
+    description: 'Manage cash registers and shifts',
+  },
+  {
+    code: 'tenant.finance.bank.manage',
+    name: 'Finance Bank Manage',
+    module: 'finance',
+    description: 'Manage bank accounts and transactions',
+  },
+  {
+    code: 'tenant.finance.expense.manage',
+    name: 'Finance Expense Manage',
+    module: 'finance',
+    description: 'Manage expenses and approvals',
+  },
+  {
+    code: 'tenant.finance.report.view',
+    name: 'Finance Report View',
+    module: 'finance',
+    description: 'View financial and jewelry reports',
+  },
 ];
 
 const SCOPE = 'tenant';
@@ -38,17 +77,20 @@ function humanize(value) {
     .join(' ');
 }
 
-const PERMISSION_CATALOG = MODULES.flatMap((module) =>
-  ACTIONS.map((action) => {
-    const code = buildPermissionCode(module, action);
-    return {
-      code,
-      name: `${humanize(module)} ${humanize(action)}`,
-      module,
-      description: `Allows ${action} access to ${module} at ${SCOPE} scope`,
-    };
-  }),
-);
+const PERMISSION_CATALOG = [
+  ...MODULES.flatMap((module) =>
+    ACTIONS.map((action) => {
+      const code = buildPermissionCode(module, action);
+      return {
+        code,
+        name: `${humanize(module)} ${humanize(action)}`,
+        module,
+        description: `Allows ${action} access to ${module} at ${SCOPE} scope`,
+      };
+    }),
+  ),
+  ...EXTRA_PERMISSIONS,
+];
 
 /**
  * @param {import('@prisma/client').PrismaClient} prisma

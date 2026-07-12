@@ -1,43 +1,61 @@
 // ─── Partners: Customers, Suppliers, Manufacturers ───────────────────────────
 
 model Customer {
-  id              String        @id @default(uuid()) @db.Uuid
-  tenantId        String        @map("tenant_id") @db.Uuid
-  customerGroupId String?       @map("customer_group_id") @db.Uuid
-  customerNo      String        @map("customer_no") @db.VarChar(30)
-  customerType    CustomerType  @default(INDIVIDUAL) @map("customer_type")
-  name            String        @db.VarChar(255)
-  email           String?       @db.VarChar(255)
-  phone           String        @db.VarChar(30)
-  phoneSecondary  String?       @map("phone_secondary") @db.VarChar(30)
-  idNumber        String?       @map("id_number") @db.VarChar(50)
-  taxNumber       String?       @map("tax_number") @db.VarChar(50)
-  tier            String        @default("standard") @db.VarChar(20)
-  isWalkIn        Boolean       @default(false) @map("is_walk_in")
-  loyaltyPoints   Int           @default(0) @map("loyalty_points")
-  totalSpent      Decimal       @default(0) @map("total_spent") @db.Decimal(18, 4)
-  status          PartnerStatus @default(ACTIVE)
-  notes           String?       @db.Text
-  tags            String[]      @default([])
-  metadata        Json          @default("{}")
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id                     String        @id @default(uuid()) @db.Uuid
+  tenantId               String        @map("tenant_id") @db.Uuid
+  customerGroupId        String?       @map("customer_group_id") @db.Uuid
+  customerNo             String        @map("customer_no") @db.VarChar(30)
+  customerType           CustomerType  @default(INDIVIDUAL) @map("customer_type")
+  name                   String        @db.VarChar(255)
+  email                  String?       @db.VarChar(255)
+  phone                  String        @db.VarChar(30)
+  phoneSecondary         String?       @map("phone_secondary") @db.VarChar(30)
+  idNumber               String?       @map("id_number") @db.VarChar(50)
+  nationalId             String?       @map("national_id") @db.VarChar(50)
+  passportNumber         String?       @map("passport_number") @db.VarChar(50)
+  taxNumber              String?       @map("tax_number") @db.VarChar(50)
+  commercialRegistration String?       @map("commercial_registration") @db.VarChar(50)
+  tier                   String        @default("standard") @db.VarChar(20)
+  isWalkIn               Boolean       @default(false) @map("is_walk_in")
+  loyaltyPoints          Int           @default(0) @map("loyalty_points")
+  totalSpent             Decimal       @default(0) @map("total_spent") @db.Decimal(18, 4)
+  status                 PartnerStatus @default(ACTIVE)
+  notes                  String?       @db.Text
+  tags                   String[]      @default([])
+  metadata               Json          @default("{}")
+  createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt              DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant         Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  customerGroup  CustomerGroup?           @relation(fields: [customerGroupId], references: [id], onDelete: SetNull)
-  phones         CustomerPhone[]
-  buybackHistory CustomerBuybackHistory[]
-  tradeInHistory CustomerTradeInHistory[]
-  reservations   Reservation[]
-  salesOrders    SalesOrder[]
-  invoices       Invoice[]
-  repairOrders   RepairOrder[]
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  customerGroup      CustomerGroup?           @relation(fields: [customerGroupId], references: [id], onDelete: SetNull)
+  phones             CustomerPhone[]
+  buybackHistory     CustomerBuybackHistory[]
+  tradeInHistory     CustomerTradeInHistory[]
+  reservations       Reservation[]
+  salesOrders        SalesOrder[]
+  invoices           Invoice[]
+  repairOrders       RepairOrder[]
+  salesReturns       SalesReturn[]
+  salesExchanges     SalesExchange[]
+  buybacks           BuybackTransaction[]
+  loyaltyAccounts    LoyaltyAccount[]
+  creditLimit        Decimal?                 @map("credit_limit") @db.Decimal(18, 4)
+  outstandingBalance Decimal                  @default(0) @map("outstanding_balance") @db.Decimal(18, 4)
+  ledgerEntries      CustomerLedgerEntry[]
+  journalLines       JournalLine[]
 
   @@unique([tenantId, customerNo])
+  @@unique([tenantId, nationalId])
+  @@unique([tenantId, passportNumber])
   @@index([tenantId])
   @@index([phone])
   @@index([email])
+  @@index([nationalId])
+  @@index([passportNumber])
+  @@index([taxNumber])
+  @@index([commercialRegistration])
+  @@index([idNumber])
   @@index([tenantId, deletedAt])
   @@map("customers")
 }
@@ -61,11 +79,14 @@ model Supplier {
   updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  category       SupplierCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  contacts       SupplierContact[]
-  purchaseOrders PurchaseOrder[]
-  inventoryItems InventoryItem[]
+  tenant             Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category           SupplierCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  contacts           SupplierContact[]
+  purchaseOrders     PurchaseOrder[]
+  inventoryItems     InventoryItem[]
+  outstandingBalance Decimal               @default(0) @map("outstanding_balance") @db.Decimal(18, 4)
+  ledgerEntries      SupplierLedgerEntry[]
+  journalLines       JournalLine[]
 
   @@unique([tenantId, supplierNo])
   @@index([tenantId])

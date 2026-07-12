@@ -1,0 +1,302 @@
+// ─── Phase 6: Sales, POS & Customer Operations ───────────────────────────────
+
+model PosSession {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  branchId       String           @map("branch_id") @db.Uuid
+  employeeId     String?          @map("employee_id") @db.Uuid
+  cashRegisterId String?          @map("cash_register_id") @db.Uuid
+  sessionNo      String           @map("session_no") @db.VarChar(30)
+  status         PosSessionStatus @default(OPEN)
+  cartData       Json             @default("{}") @map("cart_data")
+  metadata       Json             @default("{}")
+  openedAt       DateTime         @default(now()) @map("opened_at") @db.Timestamptz(6)
+  closedAt       DateTime?        @map("closed_at") @db.Timestamptz(6)
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  employee     Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  cashRegister CashRegister? @relation(fields: [cashRegisterId], references: [id], onDelete: SetNull)
+  salesOrders  SalesOrder[]
+
+  @@unique([tenantId, sessionNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("pos_sessions")
+}
+
+model SalesDocumentSequence {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  branchId     String?  @map("branch_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(30)
+  prefix       String   @db.VarChar(20)
+  currentValue Int      @default(0) @map("current_value")
+  padLength    Int      @default(6) @map("pad_length")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, branchId, documentType, prefix])
+  @@index([tenantId])
+  @@map("sales_document_sequences")
+}
+
+model SalesReturn {
+  id           String            @id @default(uuid()) @db.Uuid
+  tenantId     String            @map("tenant_id") @db.Uuid
+  branchId     String            @map("branch_id") @db.Uuid
+  customerId   String            @map("customer_id") @db.Uuid
+  employeeId   String?           @map("employee_id") @db.Uuid
+  invoiceId    String            @map("invoice_id") @db.Uuid
+  returnNo     String            @map("return_no") @db.VarChar(30)
+  status       SalesReturnStatus @default(DRAFT)
+  reason       String?           @db.Text
+  refundAmount Decimal           @default(0) @map("refund_amount") @db.Decimal(18, 4)
+  currency     String            @default("SAR") @db.Char(3)
+  approvedById String?           @map("approved_by_id") @db.Uuid
+  approvedAt   DateTime?         @map("approved_at") @db.Timestamptz(6)
+  completedAt  DateTime?         @map("completed_at") @db.Timestamptz(6)
+  notes        String?           @db.Text
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?         @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch   Branch            @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  employee Employee?         @relation("SalesReturnEmployee", fields: [employeeId], references: [id], onDelete: SetNull)
+  approver Employee?         @relation("SalesReturnApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  invoice  Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  lines    SalesReturnLine[]
+
+  @@unique([tenantId, returnNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([customerId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("sales_returns")
+}
+
+model SalesReturnLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  salesReturnId   String    @map("sales_return_id") @db.Uuid
+  invoiceItemId   String?   @map("invoice_item_id") @db.Uuid
+  inventoryItemId String?   @map("inventory_item_id") @db.Uuid
+  lineNo          Int       @map("line_no")
+  quantity        Int       @default(1)
+  refundAmount    Decimal   @map("refund_amount") @db.Decimal(18, 4)
+  reason          String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  salesReturn   SalesReturn    @relation(fields: [salesReturnId], references: [id], onDelete: Cascade)
+  invoiceItem   InvoiceItem?   @relation(fields: [invoiceItemId], references: [id], onDelete: SetNull)
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  @@unique([salesReturnId, lineNo])
+  @@index([salesReturnId])
+  @@map("sales_return_lines")
+}
+
+model SalesExchange {
+  id                   String              @id @default(uuid()) @db.Uuid
+  tenantId             String              @map("tenant_id") @db.Uuid
+  branchId             String              @map("branch_id") @db.Uuid
+  customerId           String              @map("customer_id") @db.Uuid
+  employeeId           String?             @map("employee_id") @db.Uuid
+  originalInvoiceId    String              @map("original_invoice_id") @db.Uuid
+  newInvoiceId         String?             @map("new_invoice_id") @db.Uuid
+  exchangeNo           String              @map("exchange_no") @db.VarChar(30)
+  status               SalesExchangeStatus @default(DRAFT)
+  returnAmount         Decimal             @default(0) @map("return_amount") @db.Decimal(18, 4)
+  newSaleAmount        Decimal             @default(0) @map("new_sale_amount") @db.Decimal(18, 4)
+  refundAmount         Decimal             @default(0) @map("refund_amount") @db.Decimal(18, 4)
+  priceDifference      Decimal             @default(0) @map("price_difference") @db.Decimal(18, 4)
+  currency             String              @default("SAR") @db.Char(3)
+  goldRateSnapshot     Json?               @map("gold_rate_snapshot")
+  exchangeRateSnapshot Json?               @map("exchange_rate_snapshot")
+  pricingSnapshot      Json?               @map("pricing_snapshot")
+  evaluationNotes      String?             @map("evaluation_notes") @db.Text
+  rejectionReason      String?             @map("rejection_reason") @db.Text
+  approvedById         String?             @map("approved_by_id") @db.Uuid
+  approvedAt           DateTime?           @map("approved_at") @db.Timestamptz(6)
+  completedAt          DateTime?           @map("completed_at") @db.Timestamptz(6)
+  notes                String?             @db.Text
+  createdAt            DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt            DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch          Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer        Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  employee        Employee?           @relation("SalesExchangeEmployee", fields: [employeeId], references: [id], onDelete: SetNull)
+  approver        Employee?           @relation("SalesExchangeApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  originalInvoice Invoice             @relation("ExchangeOriginalInvoice", fields: [originalInvoiceId], references: [id], onDelete: Restrict)
+  newInvoice      Invoice?            @relation("ExchangeNewInvoice", fields: [newInvoiceId], references: [id], onDelete: SetNull)
+  lines           SalesExchangeLine[]
+
+  @@unique([tenantId, exchangeNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([customerId])
+  @@index([status])
+  @@map("sales_exchanges")
+}
+
+model BuybackTransaction {
+  id               String                   @id @default(uuid()) @db.Uuid
+  tenantId         String                   @map("tenant_id") @db.Uuid
+  branchId         String                   @map("branch_id") @db.Uuid
+  customerId       String                   @map("customer_id") @db.Uuid
+  employeeId       String?                  @map("employee_id") @db.Uuid
+  inventoryItemId  String?                  @map("inventory_item_id") @db.Uuid
+  transactionNo    String                   @map("transaction_no") @db.VarChar(30)
+  status           BuybackTransactionStatus @default(DRAFT)
+  karat            GoldKarat
+  weightGrams      Decimal                  @map("weight_grams") @db.Decimal(12, 4)
+  purity           Decimal?                 @db.Decimal(8, 4)
+  goldRateSnapshot Json?                    @map("gold_rate_snapshot")
+  offeredAmount    Decimal                  @map("offered_amount") @db.Decimal(18, 4)
+  approvedAmount   Decimal?                 @map("approved_amount") @db.Decimal(18, 4)
+  currency         String                   @default("SAR") @db.Char(3)
+  approvedById     String?                  @map("approved_by_id") @db.Uuid
+  approvedAt       DateTime?                @map("approved_at") @db.Timestamptz(6)
+  completedAt      DateTime?                @map("completed_at") @db.Timestamptz(6)
+  notes            String?                  @db.Text
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?                @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  customer      Customer            @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  employee      Employee?           @relation("BuybackEmployee", fields: [employeeId], references: [id], onDelete: SetNull)
+  approver      Employee?           @relation("BuybackApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  inventoryItem InventoryItem?      @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  exchangeLines SalesExchangeLine[]
+
+  @@unique([tenantId, transactionNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([customerId])
+  @@index([status])
+  @@map("buyback_transactions")
+}
+
+model LoyaltyAccount {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  customerId     String    @map("customer_id") @db.Uuid
+  pointsBalance  Decimal   @default(0) @map("points_balance") @db.Decimal(18, 4)
+  lifetimePoints Decimal   @default(0) @map("lifetime_points") @db.Decimal(18, 4)
+  tier           String?   @db.VarChar(30)
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer     Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  transactions LoyaltyTransaction[]
+
+  @@unique([tenantId, customerId])
+  @@index([tenantId])
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyTransaction {
+  id               String                 @id @default(uuid()) @db.Uuid
+  tenantId         String                 @map("tenant_id") @db.Uuid
+  loyaltyAccountId String                 @map("loyalty_account_id") @db.Uuid
+  type             LoyaltyTransactionType
+  points           Decimal                @db.Decimal(18, 4)
+  referenceType    String?                @map("reference_type") @db.VarChar(50)
+  referenceId      String?                @map("reference_id") @db.Uuid
+  reason           String?                @db.Text
+  expiresAt        DateTime?              @map("expires_at") @db.Timestamptz(6)
+  multiplier       Decimal                @default(1) @db.Decimal(8, 4)
+  occurredAt       DateTime               @default(now()) @map("occurred_at") @db.Timestamptz(6)
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  loyaltyAccount LoyaltyAccount @relation(fields: [loyaltyAccountId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([loyaltyAccountId])
+  @@index([occurredAt])
+  @@map("loyalty_transactions")
+}
+
+model DiscountApproval {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  branchId        String                  @map("branch_id") @db.Uuid
+  referenceType   String                  @map("reference_type") @db.VarChar(50)
+  referenceId     String                  @map("reference_id") @db.Uuid
+  discountType    DiscountType            @map("discount_type")
+  requestedValue  Decimal                 @map("requested_value") @db.Decimal(18, 4)
+  approvedValue   Decimal?                @map("approved_value") @db.Decimal(18, 4)
+  status          InventoryApprovalStatus @default(PENDING)
+  requestedById   String?                 @map("requested_by_id") @db.Uuid
+  approvedById    String?                 @map("approved_by_id") @db.Uuid
+  reason          String?                 @db.Text
+  rejectedAt      DateTime?               @map("rejected_at") @db.Timestamptz(6)
+  rejectionReason String?                 @map("rejection_reason") @db.Text
+  approvedAt      DateTime?               @map("approved_at") @db.Timestamptz(6)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch    Branch    @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  requester Employee? @relation("DiscountApprovalRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approver  Employee? @relation("DiscountApprovalApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([referenceType, referenceId])
+  @@index([status])
+  @@map("discount_approvals")
+}
+
+model InvoiceTemplate {
+  id           String              @id @default(uuid()) @db.Uuid
+  tenantId     String              @map("tenant_id") @db.Uuid
+  branchId     String?             @map("branch_id") @db.Uuid
+  code         String              @db.VarChar(50)
+  name         String              @db.VarChar(150)
+  templateType InvoiceTemplateType @default(A4) @map("template_type")
+  language     String              @default("ar") @db.VarChar(10)
+  direction    TextDirection       @default(RTL)
+  paperWidthMm Int?                @map("paper_width_mm")
+  logoFileId   String?             @map("logo_file_id") @db.Uuid
+  layout       Json                @default("{}")
+  footerText   String?             @map("footer_text") @db.Text
+  termsText    String?             @map("terms_text") @db.Text
+  showQr       Boolean             @default(true) @map("show_qr")
+  showBarcode  Boolean             @default(true) @map("show_barcode")
+  showVat      Boolean             @default(true) @map("show_vat")
+  isDefault    Boolean             @default(false) @map("is_default")
+  isActive     Boolean             @default(true) @map("is_active")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  logoFile File?   @relation(fields: [logoFileId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([templateType])
+  @@map("invoice_templates")
+}

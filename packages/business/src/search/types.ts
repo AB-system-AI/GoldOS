@@ -4,6 +4,7 @@ export const SEARCH_ENTITY_TYPES = [
   'EMPLOYEE',
   'SUPPLIER',
   'INVOICE',
+  'SALES_ORDER',
   'BRANCH',
   'WORKSHOP',
   'INVENTORY',

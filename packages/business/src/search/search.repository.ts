@@ -95,6 +95,8 @@ export class SearchRepository {
         return this.searchSuppliers(tenantId, term, take);
       case 'INVOICE':
         return this.searchInvoices(tenantId, term, branchId, take);
+      case 'SALES_ORDER':
+        return this.searchSalesOrders(tenantId, term, branchId, take);
       case 'BRANCH':
         return this.searchBranches(tenantId, term, take);
       case 'WORKSHOP':
@@ -147,6 +149,11 @@ export class SearchRepository {
           { customerNo: { contains: term, mode: 'insensitive' } },
           { phone: { contains: term } },
           { email: { contains: term, mode: 'insensitive' } },
+          { nationalId: { contains: term } },
+          { passportNumber: { contains: term, mode: 'insensitive' } },
+          { taxNumber: { contains: term, mode: 'insensitive' } },
+          { commercialRegistration: { contains: term, mode: 'insensitive' } },
+          { idNumber: { contains: term } },
         ],
       },
       take,
@@ -233,7 +240,10 @@ export class SearchRepository {
       where: {
         ...tenantScope(tenantId),
         ...(branchId ? { branchId } : {}),
-        OR: [{ invoiceNo: { contains: term, mode: 'insensitive' } }],
+        OR: [
+          { invoiceNo: { contains: term, mode: 'insensitive' } },
+          { customer: { name: { contains: term, mode: 'insensitive' } } },
+        ],
       },
       include: { customer: true },
       take,
@@ -245,6 +255,37 @@ export class SearchRepository {
       entityId: row.id,
       title: row.invoiceNo,
       subtitle: row.customer?.name,
+      branchId: row.branchId,
+      metadata: { status: row.status, paymentStatus: row.paymentStatus },
+      score: 0.9,
+    }));
+  }
+
+  private async searchSalesOrders(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.salesOrder.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { orderNo: { contains: term, mode: 'insensitive' } },
+          { customer: { name: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { customer: true },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'SALES_ORDER',
+      entityId: row.id,
+      title: row.orderNo,
+      subtitle: row.customer.name,
       branchId: row.branchId,
       metadata: { status: row.status, paymentStatus: row.paymentStatus },
       score: 0.9,

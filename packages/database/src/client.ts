@@ -4,6 +4,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
+export function createPrismaClient(
+  options?: ConstructorParameters<typeof PrismaClient>[0],
+): PrismaClient {
+  return new PrismaClient(options);
+}
+
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

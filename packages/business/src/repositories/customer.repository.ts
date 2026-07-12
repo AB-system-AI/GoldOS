@@ -30,6 +30,10 @@ export class CustomerRepository {
       status?: PartnerStatus;
       customerType?: CustomerType;
       search?: string;
+      nationalId?: string;
+      passportNumber?: string;
+      taxNumber?: string;
+      commercialRegistration?: string;
       skip?: number;
       take?: number;
     },
@@ -47,8 +51,19 @@ export class CustomerRepository {
                 { customerNo: { contains: filters.search, mode: 'insensitive' } },
                 { phone: { contains: filters.search } },
                 { email: { contains: filters.search, mode: 'insensitive' } },
+                { nationalId: { contains: filters.search } },
+                { passportNumber: { contains: filters.search, mode: 'insensitive' } },
+                { taxNumber: { contains: filters.search, mode: 'insensitive' } },
+                { commercialRegistration: { contains: filters.search, mode: 'insensitive' } },
+                { idNumber: { contains: filters.search } },
               ],
             }
+          : {}),
+        ...(filters?.nationalId ? { nationalId: filters.nationalId } : {}),
+        ...(filters?.passportNumber ? { passportNumber: filters.passportNumber } : {}),
+        ...(filters?.taxNumber ? { taxNumber: filters.taxNumber } : {}),
+        ...(filters?.commercialRegistration
+          ? { commercialRegistration: filters.commercialRegistration }
           : {}),
       },
       orderBy: { name: 'asc' },

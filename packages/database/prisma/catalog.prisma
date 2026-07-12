@@ -80,7 +80,9 @@ model Product {
   purchaseOrderLines PurchaseOrderLine[]
   salesOrderLines    SalesOrderLine[]
   invoiceItems       InvoiceItem[]
+  exchangeLines      SalesExchangeLine[]
   certificates       Certificate[]
+  goldCostRecords    GoldCostRecord[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])

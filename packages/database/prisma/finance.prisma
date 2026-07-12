@@ -130,8 +130,10 @@ model Bank {
   updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?       @map("deleted_at") @db.Timestamptz(6)
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  transactions Transaction[]
+  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  transactions     Transaction[]
+  bankTransactions BankTransaction[]
+  reconciliations  BankReconciliation[]
 
   @@index([tenantId])
   @@index([tenantId, deletedAt])
@@ -154,9 +156,12 @@ model CashRegister {
   updatedAt      DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt      DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  transactions Transaction[]
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  transactions  Transaction[]
+  posSessions   PosSession[]
+  shifts        CashRegisterShift[]
+  cashMovements CashMovement[]
 
   @@unique([tenantId, code])
   @@index([tenantId])

@@ -44,6 +44,40 @@ import {
   TransferService,
   WarehouseZoneService,
 } from './inventory/services/index.js';
+import {
+  BuybackService,
+  CustomerSalesHistoryService,
+  DocumentNumberGenerator,
+  InvoiceService,
+  PaymentService,
+  PosService,
+  SalesOrderService,
+  SalesReturnService,
+  BuybackRepository,
+  InvoiceRepository,
+  LoyaltyRepository,
+  PaymentRepository,
+  PosSessionRepository,
+  SalesOrderRepository,
+  SalesReturnRepository,
+  SalesExchangeRepository,
+  DiscountApprovalRepository,
+  CashierQueueRepository,
+  InvoiceTemplateRepository,
+  ManualOverrideRepository,
+  SalesEventLogRepository,
+  SalesExchangeService,
+  DiscountApprovalService,
+  LoyaltyService,
+  CashierQueueService,
+  InvoiceTemplateService,
+  InvoicePrintService,
+  InvoiceSearchService,
+  ManualOverrideService,
+  SalesNotificationService,
+  CheckoutOrchestratorService,
+  ExchangeRateSnapshotService,
+} from './sales/index.js';
 import { AddressRepository } from './repositories/address.repository.js';
 import { AuditRepository } from './repositories/audit.repository.js';
 import { BranchRepository } from './repositories/branch.repository.js';
@@ -81,6 +115,45 @@ import { SettingsService } from './services/settings.service.js';
 import { SupplierService } from './services/supplier.service.js';
 import { TaxRuleService } from './services/tax-rule.service.js';
 import { WorkshopService } from './services/workshop.service.js';
+import {
+  AccountBalanceRepository,
+  AccountingPeriodRepository,
+  AccountingPostingService,
+  AccountingTransactionRepository,
+  BankAccountingService,
+  BankReconciliationRepository,
+  BankTransactionRepository,
+  CashMovementRepository,
+  CashRegisterService,
+  CashRegisterShiftRepository,
+  ChartOfAccountRepository,
+  ChartOfAccountService,
+  CustomerLedgerRepository,
+  CustomerLedgerService,
+  ExpenseAccountingService,
+  ExpenseCategoryRepository,
+  ExpenseRepository,
+  FinancialReportService,
+  FiscalPeriodService,
+  FiscalYearRepository,
+  GoldCostRepository,
+  JewelryReportService,
+  JournalEntryRepository,
+  JournalService,
+  OperationsAccountingIntegrationService,
+  PurchaseAccountingIntegrationService,
+  PurchaseOrderRepository,
+  PurchaseOrderService,
+  ManufacturingOrderRepository,
+  RepairOrderRepository,
+  ManufacturingOrderService,
+  RepairOrderService,
+  LedgerQueryService,
+  TenantFinanceBootstrapService,
+  SalesAccountingIntegrationService,
+  SupplierLedgerRepository,
+  SupplierLedgerService,
+} from './accounting/index.js';
 
 export interface BusinessContainerOptions {
   prisma?: PrismaClient;
@@ -118,6 +191,43 @@ export interface BusinessContainer {
   stockCountService: StockCountService;
   warehouseZoneService: WarehouseZoneService;
   inventorySearchService: InventorySearchService;
+  salesOrderService: SalesOrderService;
+  invoiceService: InvoiceService;
+  paymentService: PaymentService;
+  posService: PosService;
+  salesReturnService: SalesReturnService;
+  buybackService: BuybackService;
+  customerSalesHistoryService: CustomerSalesHistoryService;
+  salesExchangeService: SalesExchangeService;
+  discountApprovalService: DiscountApprovalService;
+  loyaltyService: LoyaltyService;
+  cashierQueueService: CashierQueueService;
+  invoiceTemplateService: InvoiceTemplateService;
+  invoicePrintService: InvoicePrintService;
+  invoiceSearchService: InvoiceSearchService;
+  manualOverrideService: ManualOverrideService;
+  salesNotificationService: SalesNotificationService;
+  checkoutOrchestratorService: CheckoutOrchestratorService;
+  exchangeRateSnapshotService: ExchangeRateSnapshotService;
+  chartOfAccountService: ChartOfAccountService;
+  journalService: JournalService;
+  accountingPostingService: AccountingPostingService;
+  fiscalPeriodService: FiscalPeriodService;
+  cashRegisterService: CashRegisterService;
+  bankAccountingService: BankAccountingService;
+  expenseAccountingService: ExpenseAccountingService;
+  customerLedgerService: CustomerLedgerService;
+  supplierLedgerService: SupplierLedgerService;
+  salesAccountingIntegrationService: SalesAccountingIntegrationService;
+  purchaseAccountingIntegrationService: PurchaseAccountingIntegrationService;
+  financialReportService: FinancialReportService;
+  jewelryReportService: JewelryReportService;
+  operationsAccountingIntegrationService: OperationsAccountingIntegrationService;
+  purchaseOrderService: PurchaseOrderService;
+  manufacturingOrderService: ManufacturingOrderService;
+  repairOrderService: RepairOrderService;
+  ledgerQueryService: LedgerQueryService;
+  tenantFinanceBootstrapService: TenantFinanceBootstrapService;
 }
 
 export function createBusinessContainer(options: BusinessContainerOptions = {}): BusinessContainer {
@@ -214,7 +324,113 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
   const pricingRuleService = new PricingRuleService(pricingRuleRepository, auditService);
   const taxRuleService = new TaxRuleService(taxRuleRepository, auditService);
   const settingsService = new SettingsService(settingsRepository, auditService);
-  const goldPriceService = new GoldPriceEngineService(goldPriceRepository, auditService);
+
+  const chartOfAccountRepository = new ChartOfAccountRepository(prismaClient);
+  const journalEntryRepository = new JournalEntryRepository(prismaClient);
+  const accountBalanceRepository = new AccountBalanceRepository(prismaClient);
+  const accountingTransactionRepository = new AccountingTransactionRepository(prismaClient);
+  const fiscalYearRepository = new FiscalYearRepository(prismaClient);
+  const accountingPeriodRepository = new AccountingPeriodRepository(prismaClient);
+  const cashRegisterShiftRepository = new CashRegisterShiftRepository(prismaClient);
+  const cashMovementRepository = new CashMovementRepository(prismaClient);
+  const bankTransactionRepository = new BankTransactionRepository(prismaClient);
+  const bankReconciliationRepository = new BankReconciliationRepository(prismaClient);
+  const customerLedgerRepository = new CustomerLedgerRepository(prismaClient);
+  const supplierLedgerRepository = new SupplierLedgerRepository(prismaClient);
+  const expenseCategoryRepository = new ExpenseCategoryRepository(prismaClient);
+  const expenseRepository = new ExpenseRepository(prismaClient);
+  const goldCostRepository = new GoldCostRepository(prismaClient);
+  const purchaseOrderRepository = new PurchaseOrderRepository(prismaClient);
+  const manufacturingOrderRepository = new ManufacturingOrderRepository(prismaClient);
+  const repairOrderRepository = new RepairOrderRepository(prismaClient);
+
+  const chartOfAccountService = new ChartOfAccountService(chartOfAccountRepository, auditService);
+  const journalService = new JournalService(
+    prismaClient,
+    journalEntryRepository,
+    chartOfAccountRepository,
+    accountBalanceRepository,
+    accountingTransactionRepository,
+    accountingPeriodRepository,
+    auditService,
+  );
+  const accountingPostingService = new AccountingPostingService(
+    chartOfAccountRepository,
+    accountingTransactionRepository,
+    journalService,
+  );
+  const fiscalPeriodService = new FiscalPeriodService(
+    fiscalYearRepository,
+    accountingPeriodRepository,
+    journalEntryRepository,
+    auditService,
+  );
+  const operationsAccountingIntegrationService = new OperationsAccountingIntegrationService(
+    accountingPostingService,
+    goldCostRepository,
+  );
+  const customerLedgerService = new CustomerLedgerService(prismaClient, customerLedgerRepository);
+  const supplierLedgerService = new SupplierLedgerService(prismaClient, supplierLedgerRepository);
+  const salesAccountingIntegrationService = new SalesAccountingIntegrationService(
+    accountingPostingService,
+    customerLedgerService,
+    goldCostRepository,
+  );
+  const purchaseAccountingIntegrationService = new PurchaseAccountingIntegrationService(
+    accountingPostingService,
+    supplierLedgerService,
+  );
+  const cashRegisterService = new CashRegisterService(
+    cashRegisterShiftRepository,
+    cashMovementRepository,
+    auditService,
+    operationsAccountingIntegrationService,
+  );
+  const bankAccountingService = new BankAccountingService(
+    bankTransactionRepository,
+    bankReconciliationRepository,
+    auditService,
+    operationsAccountingIntegrationService,
+  );
+  const expenseAccountingService = new ExpenseAccountingService(
+    prismaClient,
+    expenseRepository,
+    expenseCategoryRepository,
+    accountingPostingService,
+    auditService,
+  );
+  const financialReportService = new FinancialReportService(
+    accountBalanceRepository,
+    chartOfAccountRepository,
+    journalEntryRepository,
+  );
+  const jewelryReportService = new JewelryReportService(prismaClient);
+  const ledgerQueryService = new LedgerQueryService(
+    financialReportService,
+    customerLedgerService,
+    supplierLedgerService,
+  );
+  const tenantFinanceBootstrapService = new TenantFinanceBootstrapService(
+    chartOfAccountService,
+    expenseCategoryRepository,
+    auditService,
+  );
+  const manufacturingOrderService = new ManufacturingOrderService(
+    manufacturingOrderRepository,
+    auditService,
+    operationsAccountingIntegrationService,
+  );
+  const repairOrderService = new RepairOrderService(
+    repairOrderRepository,
+    auditService,
+    operationsAccountingIntegrationService,
+  );
+
+  const goldPriceService = new GoldPriceEngineService(
+    goldPriceRepository,
+    auditService,
+    operationsAccountingIntegrationService,
+  );
   const globalSearchService = new GlobalSearchService(prismaSearchBackend);
 
   const categoryService = new CategoryService(
@@ -275,6 +491,7 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
     movementEngine,
     lifecycleEngine,
     auditService,
+    operationsAccountingIntegrationService,
   );
   const stockCountService = new StockCountService(
     stockCountRepository,
@@ -282,6 +499,7 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
     entityOwnershipRepository,
     skuGenerator,
     auditService,
+    operationsAccountingIntegrationService,
   );
   const warehouseZoneService = new WarehouseZoneService(
     warehouseZoneRepository,
@@ -291,6 +509,154 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
   const inventorySearchService = new InventorySearchService(
     inventoryItemRepository,
     productRepository,
+  );
+
+  const salesOrderRepository = new SalesOrderRepository(prismaClient);
+  const invoiceRepository = new InvoiceRepository(prismaClient);
+  const paymentRepository = new PaymentRepository(prismaClient);
+  const posSessionRepository = new PosSessionRepository(prismaClient);
+  const salesReturnRepository = new SalesReturnRepository(prismaClient);
+  const buybackRepository = new BuybackRepository(prismaClient);
+  const loyaltyRepository = new LoyaltyRepository(prismaClient);
+  const salesExchangeRepository = new SalesExchangeRepository(prismaClient);
+  const discountApprovalRepository = new DiscountApprovalRepository(prismaClient);
+  const cashierQueueRepository = new CashierQueueRepository(prismaClient);
+  const invoiceTemplateRepository = new InvoiceTemplateRepository(prismaClient);
+  const manualOverrideRepository = new ManualOverrideRepository(prismaClient);
+  const salesEventLogRepository = new SalesEventLogRepository(prismaClient);
+  const documentNumberGenerator = new DocumentNumberGenerator(prismaClient);
+
+  const salesNotificationService = new SalesNotificationService(salesEventLogRepository);
+  const loyaltyService = new LoyaltyService(loyaltyRepository, auditService);
+  const discountApprovalService = new DiscountApprovalService(
+    discountApprovalRepository,
+    salesNotificationService,
+    auditService,
+  );
+  const exchangeRateSnapshotService = new ExchangeRateSnapshotService(
+    currencyRepository,
+    exchangeRateRepository,
+  );
+
+  const salesOrderService = new SalesOrderService(
+    salesOrderRepository,
+    inventoryItemRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    goldPriceService,
+    exchangeRateSnapshotService,
+    movementEngine,
+    lifecycleEngine,
+    lockEngine,
+    auditService,
+  );
+  const invoiceService = new InvoiceService(
+    invoiceRepository,
+    salesOrderRepository,
+    documentNumberGenerator,
+    goldPriceService,
+    auditService,
+    salesNotificationService,
+  );
+  const paymentService = new PaymentService(
+    paymentRepository,
+    invoiceRepository,
+    salesOrderRepository,
+    documentNumberGenerator,
+    auditService,
+    salesAccountingIntegrationService,
+    purchaseAccountingIntegrationService,
+  );
+
+  const purchaseOrderService = new PurchaseOrderService(
+    purchaseOrderRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    auditService,
+    purchaseAccountingIntegrationService,
+  );
+
+  const checkoutOrchestratorService = new CheckoutOrchestratorService(
+    prismaClient,
+    salesOrderRepository,
+    salesOrderService,
+    invoiceService,
+    paymentService,
+    discountApprovalService,
+    loyaltyService,
+    lockEngine,
+    reservationService,
+    salesNotificationService,
+    salesAccountingIntegrationService,
+  );
+  const posService = new PosService(
+    posSessionRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    inventorySearchService,
+    salesOrderService,
+    checkoutOrchestratorService,
+    salesNotificationService,
+    auditService,
+  );
+  const salesReturnService = new SalesReturnService(
+    salesReturnRepository,
+    invoiceRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    movementEngine,
+    lifecycleEngine,
+    auditService,
+    loyaltyService,
+    salesNotificationService,
+    salesAccountingIntegrationService,
+  );
+  const buybackService = new BuybackService(
+    buybackRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    goldPriceService,
+    movementEngine,
+    auditService,
+    salesNotificationService,
+    salesAccountingIntegrationService,
+  );
+  const customerSalesHistoryService = new CustomerSalesHistoryService(
+    prismaClient,
+    customerRepository,
+    loyaltyRepository,
+  );
+  const salesExchangeService = new SalesExchangeService(
+    salesExchangeRepository,
+    invoiceRepository,
+    entityOwnershipRepository,
+    documentNumberGenerator,
+    goldPriceService,
+    exchangeRateSnapshotService,
+    movementEngine,
+    lifecycleEngine,
+    salesNotificationService,
+    auditService,
+    salesAccountingIntegrationService,
+  );
+  const cashierQueueService = new CashierQueueService(
+    cashierQueueRepository,
+    salesOrderRepository,
+    entityOwnershipRepository,
+    lockEngine,
+    salesNotificationService,
+    auditService,
+  );
+  const invoiceTemplateService = new InvoiceTemplateService(
+    invoiceTemplateRepository,
+    auditService,
+  );
+  const invoicePrintService = new InvoicePrintService(invoiceRepository, invoiceTemplateService);
+  const invoiceSearchService = new InvoiceSearchService(prismaClient);
+  const manualOverrideService = new ManualOverrideService(
+    manualOverrideRepository,
+    entityOwnershipRepository,
+    auditService,
   );
 
   return {
@@ -325,5 +691,42 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
     stockCountService,
     warehouseZoneService,
     inventorySearchService,
+    salesOrderService,
+    invoiceService,
+    paymentService,
+    posService,
+    salesReturnService,
+    buybackService,
+    customerSalesHistoryService,
+    salesExchangeService,
+    discountApprovalService,
+    loyaltyService,
+    cashierQueueService,
+    invoiceTemplateService,
+    invoicePrintService,
+    invoiceSearchService,
+    manualOverrideService,
+    salesNotificationService,
+    checkoutOrchestratorService,
+    exchangeRateSnapshotService,
+    chartOfAccountService,
+    journalService,
+    accountingPostingService,
+    fiscalPeriodService,
+    cashRegisterService,
+    bankAccountingService,
+    expenseAccountingService,
+    customerLedgerService,
+    supplierLedgerService,
+    salesAccountingIntegrationService,
+    purchaseAccountingIntegrationService,
+    financialReportService,
+    jewelryReportService,
+    operationsAccountingIntegrationService,
+    purchaseOrderService,
+    manufacturingOrderService,
+    repairOrderService,
+    ledgerQueryService,
+    tenantFinanceBootstrapService,
   };
 }

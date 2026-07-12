@@ -5,6 +5,7 @@ import type { GoldKarat } from '@goldos/database';
 import type { AuditContext, AuditService } from '../../services/audit.service.js';
 import type { GoldPriceRepository } from '../../repositories/gold-price.repository.js';
 import { parseInput } from '../../services/validation.js';
+import type { OperationsAccountingIntegrationService } from '../../accounting/services/operations-integration.service.js';
 import { ManualGoldPriceProvider } from './manual.provider.js';
 import { MockGoldPriceProvider } from './mock.provider.js';
 import { GoldPriceOrchestrator } from './orchestrator.js';
@@ -39,6 +40,7 @@ export class GoldPriceEngineService {
   constructor(
     private readonly goldPriceRepository: GoldPriceRepository,
     private readonly auditService: AuditService,
+    private readonly operationsAccountingIntegrationService?: OperationsAccountingIntegrationService,
   ) {}
 
   private async buildOrchestrator(): Promise<GoldPriceOrchestrator> {
@@ -240,6 +242,38 @@ export class GoldPriceEngineService {
       newValues: override,
       context,
     });
+
+    if (this.operationsAccountingIntegrationService && data.pricePerGram) {
+      const history = await this.goldPriceRepository.listHistory(tenantId, { karat: data.karat });
+      const previous = history.find((h) => h.isCurrent) ?? history[0];
+      const previousPrice = previous ? Number(previous.pricePerGram) : 0;
+      const delta = data.pricePerGram - previousPrice;
+      if (delta !== 0) {
+        const items = await this.goldPriceRepository.listInventoryWeightByKarat(
+          tenantId,
+          data.karat,
+        );
+        const totalWeight = items.reduce((s, i) => s + i.weight, 0);
+        const adjustmentAmount = Math.abs(delta * totalWeight);
+        if (adjustmentAmount > 0) {
+          await this.operationsAccountingIntegrationService.postGoldRevaluation(
+            tenantId,
+            {
+              referenceId: override.id,
+              adjustmentAmount,
+              isIncrease: delta > 0,
+              entryDate: new Date(),
+              goldCost: {
+                weightGrams: totalWeight,
+                karat: data.karat,
+                purchaseCost: adjustmentAmount,
+              },
+            },
+            context,
+          );
+        }
+      }
+    }
 
     return override;
   }

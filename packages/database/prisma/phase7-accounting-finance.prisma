@@ -1,0 +1,461 @@
+// ─── Phase 7: Enterprise Accounting & Finance ────────────────────────────────
+
+model ChartOfAccount {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @map("tenant_id") @db.Uuid
+  branchId      String?       @map("branch_id") @db.Uuid
+  parentId      String?       @map("parent_id") @db.Uuid
+  code          String        @db.VarChar(30)
+  name          String        @db.VarChar(150)
+  accountType   AccountType   @map("account_type")
+  normalBalance NormalBalance @map("normal_balance")
+  isSystem      Boolean       @default(false) @map("is_system")
+  isDefault     Boolean       @default(false) @map("is_default")
+  isActive      Boolean       @default(true) @map("is_active")
+  description   String?       @db.Text
+  metadata      Json          @default("{}")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamptz(6)
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch            Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  parent            ChartOfAccount?   @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children          ChartOfAccount[]  @relation("AccountHierarchy")
+  journalLines      JournalLine[]
+  accountBalances   AccountBalance[]
+  expenseCategories ExpenseCategory[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([parentId])
+  @@index([accountType])
+  @@index([isActive])
+  @@index([tenantId, deletedAt])
+  @@map("chart_of_accounts")
+}
+
+model FiscalYear {
+  id        String           @id @default(uuid()) @db.Uuid
+  tenantId  String           @map("tenant_id") @db.Uuid
+  name      String           @db.VarChar(50)
+  startDate DateTime         @map("start_date") @db.Date
+  endDate   DateTime         @map("end_date") @db.Date
+  status    FiscalYearStatus @default(OPEN)
+  isCurrent Boolean          @default(false) @map("is_current")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  periods AccountingPeriod[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([status])
+  @@map("fiscal_years")
+}
+
+model AccountingPeriod {
+  id           String                 @id @default(uuid()) @db.Uuid
+  tenantId     String                 @map("tenant_id") @db.Uuid
+  fiscalYearId String                 @map("fiscal_year_id") @db.Uuid
+  name         String                 @db.VarChar(50)
+  periodNo     Int                    @map("period_no")
+  startDate    DateTime               @map("start_date") @db.Date
+  endDate      DateTime               @map("end_date") @db.Date
+  status       AccountingPeriodStatus @default(OPEN)
+  closedAt     DateTime?              @map("closed_at") @db.Timestamptz(6)
+  closedById   String?                @map("closed_by_id") @db.Uuid
+  createdAt    DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime?              @map("deleted_at") @db.Timestamptz(6)
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  fiscalYear      FiscalYear       @relation(fields: [fiscalYearId], references: [id], onDelete: Restrict)
+  closedBy        Employee?        @relation("PeriodClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  journalEntries  JournalEntry[]
+  accountBalances AccountBalance[]
+
+  @@unique([fiscalYearId, periodNo])
+  @@index([tenantId])
+  @@index([fiscalYearId])
+  @@index([status])
+  @@map("accounting_periods")
+}
+
+model JournalEntry {
+  id            String                   @id @default(uuid()) @db.Uuid
+  tenantId      String                   @map("tenant_id") @db.Uuid
+  branchId      String?                  @map("branch_id") @db.Uuid
+  periodId      String?                  @map("period_id") @db.Uuid
+  journalNo     String                   @map("journal_no") @db.VarChar(30)
+  entryDate     DateTime                 @map("entry_date") @db.Date
+  status        JournalEntryStatus       @default(DRAFT)
+  referenceType AccountingReferenceType? @map("reference_type")
+  referenceId   String?                  @map("reference_id") @db.Uuid
+  currency      String                   @default("SAR") @db.Char(3)
+  description   String                   @db.Text
+  totalDebit    Decimal                  @default(0) @map("total_debit") @db.Decimal(18, 4)
+  totalCredit   Decimal                  @default(0) @map("total_credit") @db.Decimal(18, 4)
+  createdById   String?                  @map("created_by_id") @db.Uuid
+  postedById    String?                  @map("posted_by_id") @db.Uuid
+  postedAt      DateTime?                @map("posted_at") @db.Timestamptz(6)
+  reversedById  String?                  @map("reversed_by_id") @db.Uuid
+  reversedAt    DateTime?                @map("reversed_at") @db.Timestamptz(6)
+  reversalOfId  String?                  @map("reversal_of_id") @db.Uuid
+  metadata      Json                     @default("{}")
+  createdAt     DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?                @map("deleted_at") @db.Timestamptz(6)
+
+  tenant                Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch                Branch?                @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  period                AccountingPeriod?      @relation(fields: [periodId], references: [id], onDelete: SetNull)
+  createdBy             Employee?              @relation("JournalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  postedBy              Employee?              @relation("JournalPostedBy", fields: [postedById], references: [id], onDelete: SetNull)
+  reversedBy            Employee?              @relation("JournalReversedBy", fields: [reversedById], references: [id], onDelete: SetNull)
+  reversalOf            JournalEntry?          @relation("JournalReversal", fields: [reversalOfId], references: [id], onDelete: SetNull)
+  reversals             JournalEntry[]         @relation("JournalReversal")
+  lines                 JournalLine[]
+  accountingTransaction AccountingTransaction?
+  cashMovements         CashMovement[]
+  bankTransactions      BankTransaction[]
+  customerLedgerEntries CustomerLedgerEntry[]
+  supplierLedgerEntries SupplierLedgerEntry[]
+  expenses              Expense[]
+
+  @@unique([tenantId, journalNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([periodId])
+  @@index([status])
+  @@index([referenceType, referenceId])
+  @@index([entryDate])
+  @@index([tenantId, deletedAt])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id             String    @id @default(uuid()) @db.Uuid
+  journalEntryId String    @map("journal_entry_id") @db.Uuid
+  lineNo         Int       @map("line_no")
+  accountId      String    @map("account_id") @db.Uuid
+  debit          Decimal   @default(0) @db.Decimal(18, 4)
+  credit         Decimal   @default(0) @db.Decimal(18, 4)
+  currency       String    @default("SAR") @db.Char(3)
+  description    String?   @db.Text
+  customerId     String?   @map("customer_id") @db.Uuid
+  supplierId     String?   @map("supplier_id") @db.Uuid
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  journalEntry JournalEntry   @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account      ChartOfAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  customer     Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  @@unique([journalEntryId, lineNo])
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@index([customerId])
+  @@index([supplierId])
+  @@map("journal_lines")
+}
+
+model AccountingTransaction {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  transactionType AccountingReferenceType @map("transaction_type")
+  referenceType   String                  @map("reference_type") @db.VarChar(50)
+  referenceId     String                  @map("reference_id") @db.Uuid
+  journalEntryId  String                  @unique @map("journal_entry_id") @db.Uuid
+  status          JournalEntryStatus      @default(DRAFT)
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([referenceType, referenceId])
+  @@index([transactionType])
+  @@map("accounting_transactions")
+}
+
+model AccountBalance {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  accountId   String   @map("account_id") @db.Uuid
+  branchId    String?  @map("branch_id") @db.Uuid
+  periodId    String?  @map("period_id") @db.Uuid
+  currency    String   @default("SAR") @db.Char(3)
+  debitTotal  Decimal  @default(0) @map("debit_total") @db.Decimal(18, 4)
+  creditTotal Decimal  @default(0) @map("credit_total") @db.Decimal(18, 4)
+  balance     Decimal  @default(0) @db.Decimal(18, 4)
+  asOfDate    DateTime @map("as_of_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant  Tenant            @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  account ChartOfAccount    @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  branch  Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  period  AccountingPeriod? @relation(fields: [periodId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, accountId, branchId, periodId, currency])
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([branchId])
+  @@index([periodId])
+  @@map("account_balances")
+}
+
+model CashRegisterShift {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  branchId        String                  @map("branch_id") @db.Uuid
+  cashRegisterId  String                  @map("cash_register_id") @db.Uuid
+  employeeId      String                  @map("employee_id") @db.Uuid
+  status          CashRegisterShiftStatus @default(OPEN)
+  openingBalance  Decimal                 @default(0) @map("opening_balance") @db.Decimal(18, 4)
+  closingBalance  Decimal?                @map("closing_balance") @db.Decimal(18, 4)
+  expectedBalance Decimal?                @map("expected_balance") @db.Decimal(18, 4)
+  shortageOverage Decimal?                @map("shortage_overage") @db.Decimal(18, 4)
+  currency        String                  @default("SAR") @db.Char(3)
+  openedAt        DateTime                @map("opened_at") @db.Timestamptz(6)
+  closedAt        DateTime?               @map("closed_at") @db.Timestamptz(6)
+  notes           String?                 @db.Text
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch       Branch         @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  cashRegister CashRegister   @relation(fields: [cashRegisterId], references: [id], onDelete: Restrict)
+  employee     Employee       @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  movements    CashMovement[]
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([cashRegisterId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("cash_register_shifts")
+}
+
+model CashMovement {
+  id             String           @id @default(uuid()) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  branchId       String           @map("branch_id") @db.Uuid
+  shiftId        String?          @map("shift_id") @db.Uuid
+  cashRegisterId String           @map("cash_register_id") @db.Uuid
+  movementType   CashMovementType @map("movement_type")
+  amount         Decimal          @db.Decimal(18, 4)
+  currency       String           @default("SAR") @db.Char(3)
+  description    String           @db.Text
+  fromEmployeeId String?          @map("from_employee_id") @db.Uuid
+  toEmployeeId   String?          @map("to_employee_id") @db.Uuid
+  journalEntryId String?          @map("journal_entry_id") @db.Uuid
+  occurredAt     DateTime         @map("occurred_at") @db.Timestamptz(6)
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?        @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch       Branch             @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  shift        CashRegisterShift? @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  cashRegister CashRegister       @relation(fields: [cashRegisterId], references: [id], onDelete: Restrict)
+  fromEmployee Employee?          @relation("CashMovementFrom", fields: [fromEmployeeId], references: [id], onDelete: SetNull)
+  toEmployee   Employee?          @relation("CashMovementTo", fields: [toEmployeeId], references: [id], onDelete: SetNull)
+  journalEntry JournalEntry?      @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([shiftId])
+  @@index([cashRegisterId])
+  @@index([movementType])
+  @@index([occurredAt])
+  @@map("cash_movements")
+}
+
+model BankTransaction {
+  id              String              @id @default(uuid()) @db.Uuid
+  tenantId        String              @map("tenant_id") @db.Uuid
+  bankId          String              @map("bank_id") @db.Uuid
+  transactionNo   String              @map("transaction_no") @db.VarChar(30)
+  transactionType BankTransactionType @map("transaction_type")
+  status          TransactionStatus   @default(PENDING)
+  amount          Decimal             @db.Decimal(18, 4)
+  currency        String              @default("SAR") @db.Char(3)
+  description     String              @db.Text
+  referenceType   String?             @map("reference_type") @db.VarChar(50)
+  referenceId     String?             @map("reference_id") @db.Uuid
+  journalEntryId  String?             @map("journal_entry_id") @db.Uuid
+  occurredAt      DateTime            @map("occurred_at") @db.Timestamptz(6)
+  metadata        Json                @default("{}")
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  bank         Bank          @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, transactionNo])
+  @@index([tenantId])
+  @@index([bankId])
+  @@index([transactionType])
+  @@index([occurredAt])
+  @@map("bank_transactions")
+}
+
+model BankReconciliation {
+  id               String                   @id @default(uuid()) @db.Uuid
+  tenantId         String                   @map("tenant_id") @db.Uuid
+  bankId           String                   @map("bank_id") @db.Uuid
+  periodEnd        DateTime                 @map("period_end") @db.Date
+  statementBalance Decimal                  @map("statement_balance") @db.Decimal(18, 4)
+  bookBalance      Decimal                  @map("book_balance") @db.Decimal(18, 4)
+  difference       Decimal                  @default(0) @db.Decimal(18, 4)
+  status           BankReconciliationStatus @default(DRAFT)
+  notes            String?                  @db.Text
+  reconciledAt     DateTime?                @map("reconciled_at") @db.Timestamptz(6)
+  reconciledById   String?                  @map("reconciled_by_id") @db.Uuid
+  createdAt        DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?                @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  bank         Bank      @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  reconciledBy Employee? @relation(fields: [reconciledById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([bankId])
+  @@index([status])
+  @@map("bank_reconciliations")
+}
+
+model CustomerLedgerEntry {
+  id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @map("tenant_id") @db.Uuid
+  customerId     String          @map("customer_id") @db.Uuid
+  branchId       String?         @map("branch_id") @db.Uuid
+  entryType      LedgerEntryType @map("entry_type")
+  referenceType  String          @map("reference_type") @db.VarChar(50)
+  referenceId    String          @map("reference_id") @db.Uuid
+  debit          Decimal         @default(0) @db.Decimal(18, 4)
+  credit         Decimal         @default(0) @db.Decimal(18, 4)
+  runningBalance Decimal         @default(0) @map("running_balance") @db.Decimal(18, 4)
+  currency       String          @default("SAR") @db.Char(3)
+  description    String?         @db.Text
+  entryDate      DateTime        @map("entry_date") @db.Date
+  journalEntryId String?         @map("journal_entry_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?       @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([branchId])
+  @@index([entryType])
+  @@index([entryDate])
+  @@index([referenceType, referenceId])
+  @@map("customer_ledger_entries")
+}
+
+model SupplierLedgerEntry {
+  id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @map("tenant_id") @db.Uuid
+  supplierId     String          @map("supplier_id") @db.Uuid
+  branchId       String?         @map("branch_id") @db.Uuid
+  entryType      LedgerEntryType @map("entry_type")
+  referenceType  String          @map("reference_type") @db.VarChar(50)
+  referenceId    String          @map("reference_id") @db.Uuid
+  debit          Decimal         @default(0) @db.Decimal(18, 4)
+  credit         Decimal         @default(0) @db.Decimal(18, 4)
+  runningBalance Decimal         @default(0) @map("running_balance") @db.Decimal(18, 4)
+  currency       String          @default("SAR") @db.Char(3)
+  description    String?         @db.Text
+  entryDate      DateTime        @map("entry_date") @db.Date
+  journalEntryId String?         @map("journal_entry_id") @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?       @map("deleted_at") @db.Timestamptz(6)
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  supplier     Supplier      @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  branch       Branch?       @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([branchId])
+  @@index([entryType])
+  @@index([entryDate])
+  @@index([referenceType, referenceId])
+  @@map("supplier_ledger_entries")
+}
+
+model ExpenseCategory {
+  id               String              @id @default(uuid()) @db.Uuid
+  tenantId         String              @map("tenant_id") @db.Uuid
+  code             String              @db.VarChar(30)
+  name             String              @db.VarChar(100)
+  categoryType     ExpenseCategoryType @map("category_type")
+  defaultAccountId String?             @map("default_account_id") @db.Uuid
+  isActive         Boolean             @default(true) @map("is_active")
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?           @map("deleted_at") @db.Timestamptz(6)
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  defaultAccount ChartOfAccount? @relation(fields: [defaultAccountId], references: [id], onDelete: SetNull)
+  expenses       Expense[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([categoryType])
+  @@map("expense_categories")
+}
+
+model GoldCostRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  inventoryItemId String?   @map("inventory_item_id") @db.Uuid
+  productId       String?   @map("product_id") @db.Uuid
+  referenceType   String    @map("reference_type") @db.VarChar(50)
+  referenceId     String    @map("reference_id") @db.Uuid
+  weightGrams     Decimal   @map("weight_grams") @db.Decimal(12, 4)
+  karat           GoldKarat
+  purity          Decimal?  @db.Decimal(8, 4)
+  purchaseCost    Decimal   @default(0) @map("purchase_cost") @db.Decimal(18, 4)
+  makingCost      Decimal   @default(0) @map("making_cost") @db.Decimal(18, 4)
+  stoneCost       Decimal   @default(0) @map("stone_cost") @db.Decimal(18, 4)
+  laborCost       Decimal   @default(0) @map("labor_cost") @db.Decimal(18, 4)
+  totalCost       Decimal   @map("total_cost") @db.Decimal(18, 4)
+  currency        String    @default("SAR") @db.Char(3)
+  metadata        Json      @default("{}")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([inventoryItemId])
+  @@index([productId])
+  @@index([referenceType, referenceId])
+  @@map("gold_cost_records")
+}

@@ -9,6 +9,7 @@ import type { MovementEngine } from '../engines/movement.engine.js';
 import type { SkuGenerator } from '../engines/sku-generator.js';
 import type { InventoryAdjustmentRepository } from '../repositories/inventory-adjustment.repository.js';
 import type { InventoryItemRepository } from '../repositories/inventory-item.repository.js';
+import type { OperationsAccountingIntegrationService } from '../../accounting/services/operations-integration.service.js';
 
 const createAdjustmentSchema = z.object({
   branchId: z.string().uuid(),
@@ -36,6 +37,7 @@ export class InventoryAdjustmentService {
     private readonly movementEngine: MovementEngine,
     private readonly lifecycleEngine: LifecycleEngine,
     private readonly auditService: AuditService,
+    private readonly operationsAccountingIntegrationService?: OperationsAccountingIntegrationService,
   ) {}
 
   getById(tenantId: string, id: string) {
@@ -185,6 +187,30 @@ export class InventoryAdjustmentService {
       }),
       'Inventory adjustment not found',
     );
+
+    if (this.operationsAccountingIntegrationService) {
+      let totalAmount = 0;
+      let netDelta = 0;
+      for (const line of existing.lines) {
+        const item = await this.inventoryItemRepository.findById(tenantId, line.inventoryItemId);
+        const unitCost = Number(item?.costPrice ?? 0);
+        totalAmount += unitCost * Math.abs(line.quantityDelta);
+        netDelta += line.quantityDelta;
+      }
+      if (totalAmount > 0) {
+        await this.operationsAccountingIntegrationService.postInventoryAdjustment(
+          tenantId,
+          {
+            adjustmentId: id,
+            branchId: existing.branchId,
+            amount: totalAmount,
+            isIncrease: netDelta > 0,
+            entryDate: new Date(),
+          },
+          context,
+        );
+      }
+    }
 
     await this.auditService.log({
       tenantId,

@@ -135,7 +135,9 @@ enum PurchaseOrderStatus {
 
 enum SalesOrderStatus {
   DRAFT
+  PENDING_PAYMENT
   CONFIRMED
+  COMPLETED
   PARTIALLY_FULFILLED
   FULFILLED
   INVOICED
@@ -540,6 +542,8 @@ enum InventoryLockType {
   REPAIR
   INVESTIGATION
   MANUAL
+  SALE
+  RESERVATION
 }
 
 enum InventoryApprovalType {
@@ -598,4 +602,211 @@ enum DiamondShape {
   ASSCHER
   HEART
   OTHER
+}
+
+enum PosSessionStatus {
+  OPEN
+  PARKED
+  CHECKOUT
+  CLOSED
+}
+
+enum SalesReturnStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum SalesExchangeStatus {
+  DRAFT
+  EVALUATION
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum BuybackTransactionStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  COMPLETED
+  CANCELLED
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  ADJUSTMENT
+  EXPIRE
+  REVERSE
+}
+
+enum CashierQueueStatus {
+  WAITING
+  CALLING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceTemplateType {
+  RECEIPT_80MM
+  RECEIPT_58MM
+  A4
+  TAX_INVOICE
+  GIFT_INVOICE
+  GOLD_CERTIFICATE
+}
+
+enum TextDirection {
+  RTL
+  LTR
+}
+
+enum ManualOverrideType {
+  SELLING_PRICE
+  BUYBACK_PRICE
+  DISCOUNT
+  MAKING_CHARGE
+  LABOR_CHARGE
+}
+
+enum SalesExchangeLineDirection {
+  RETURN
+  NEW_SALE
+}
+
+enum SalesEventType {
+  SALE_COMPLETED
+  PAYMENT_COMPLETED
+  DISCOUNT_PENDING
+  DISCOUNT_APPROVED
+  DISCOUNT_REJECTED
+  EXCHANGE_APPROVED
+  EXCHANGE_COMPLETED
+  RETURN_COMPLETED
+  BUYBACK_COMPLETED
+  INVOICE_ISSUED
+  POS_SESSION_OPENED
+  POS_SESSION_CLOSED
+  QUEUE_WAITING
+  QUEUE_CALLING
+}
+
+// ─── Phase 7: Accounting & Finance ───────────────────────────────────────────
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+  COGS
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  REVERSED
+  LOCKED
+}
+
+enum FiscalYearStatus {
+  OPEN
+  CLOSED
+  LOCKED
+}
+
+enum AccountingPeriodStatus {
+  OPEN
+  CLOSED
+  LOCKED
+}
+
+enum AccountingReferenceType {
+  SALES_INVOICE
+  PURCHASE_ORDER
+  PAYMENT
+  EXPENSE
+  BUYBACK
+  SALES_RETURN
+  SALES_EXCHANGE
+  INVENTORY_ADJUSTMENT
+  GOLD_PRICE_ADJUSTMENT
+  CASH_MOVEMENT
+  BANK_TRANSACTION
+  MANUFACTURING_ORDER
+  REPAIR_ORDER
+  MANUAL
+  PERIOD_CLOSE
+}
+
+enum LedgerEntryType {
+  INVOICE
+  PAYMENT
+  REFUND
+  CREDIT_NOTE
+  DEBIT_NOTE
+  PURCHASE
+  SUPPLIER_PAYMENT
+  ADJUSTMENT
+  OPENING_BALANCE
+}
+
+enum ExpenseCategoryType {
+  RENT
+  SALARIES
+  ELECTRICITY
+  INTERNET
+  MARKETING
+  TRANSPORT
+  MAINTENANCE
+  TAXES
+  INSURANCE
+  MISCELLANEOUS
+  OTHER
+}
+
+enum CashMovementType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  ADJUSTMENT
+  SHORTAGE
+  OVERAGE
+  OPENING
+  CLOSING
+}
+
+enum CashRegisterShiftStatus {
+  OPEN
+  CLOSED
+}
+
+enum BankTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum BankReconciliationStatus {
+  DRAFT
+  IN_PROGRESS
+  RECONCILED
+  VOIDED
 }

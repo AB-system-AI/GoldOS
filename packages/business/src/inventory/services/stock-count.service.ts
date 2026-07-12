@@ -7,6 +7,7 @@ import type { EntityOwnershipRepository } from '../../repositories/entity-owners
 import type { SkuGenerator } from '../engines/sku-generator.js';
 import type { InventoryItemRepository } from '../repositories/inventory-item.repository.js';
 import type { StockCountRepository } from '../repositories/stock-count.repository.js';
+import type { OperationsAccountingIntegrationService } from '../../accounting/services/operations-integration.service.js';
 
 const createStockCountSchema = z.object({
   branchId: z.string().uuid(),
@@ -34,6 +35,7 @@ export class StockCountService {
     private readonly entityOwnershipRepository: EntityOwnershipRepository,
     private readonly skuGenerator: SkuGenerator,
     private readonly auditService: AuditService,
+    private readonly operationsAccountingIntegrationService?: OperationsAccountingIntegrationService,
   ) {}
 
   getById(tenantId: string, id: string) {
@@ -178,6 +180,33 @@ export class StockCountService {
       }),
       'Stock count not found',
     );
+
+    if (this.operationsAccountingIntegrationService) {
+      const lines = existing.lines;
+      let varianceAmount = 0;
+      let netVariance = 0;
+      for (const line of lines) {
+        const variance = line.variance ?? 0;
+        if (variance === 0) continue;
+        const item = await this.inventoryItemRepository.findById(tenantId, line.inventoryItemId);
+        const unitCost = Number(item?.costPrice ?? 0);
+        varianceAmount += unitCost * Math.abs(variance);
+        netVariance += variance;
+      }
+      if (varianceAmount > 0) {
+        await this.operationsAccountingIntegrationService.postInventoryAdjustment(
+          tenantId,
+          {
+            adjustmentId: id,
+            branchId: existing.branchId,
+            amount: varianceAmount,
+            isIncrease: netVariance > 0,
+            entryDate: new Date(),
+          },
+          context,
+        );
+      }
+    }
 
     await this.auditService.log({
       tenantId,

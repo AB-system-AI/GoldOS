@@ -26,23 +26,28 @@ model InventoryItem {
   updatedAt          DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt          DateTime?               @map("deleted_at") @db.Timestamptz(6)
 
-  tenant          Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch          Branch                    @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  product         Product                   @relation(fields: [productId], references: [id], onDelete: Restrict)
-  inventoryLot    InventoryLot?             @relation(fields: [inventoryLotId], references: [id], onDelete: SetNull)
-  warehouseZone   WarehouseZone?            @relation(fields: [warehouseZoneId], references: [id], onDelete: SetNull)
-  supplier        Supplier?                 @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  stockMovements  StockMovement[]
-  transferLines   TransferLine[]
-  reservations    Reservation[]
-  invoiceItems    InvoiceItem[]
-  lifecycleEvents AssetLifecycleEvent[]
-  custodyEvents   CustodyEvent[]
-  inventoryLocks  InventoryLock[]
-  priceHistory    InventoryPriceHistory[]
-  weightHistory   InventoryWeightHistory[]
-  adjustmentLines InventoryAdjustmentLine[]
-  stockCountLines StockCountLine[]
+  tenant              Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch              Branch                    @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  product             Product                   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryLot        InventoryLot?             @relation(fields: [inventoryLotId], references: [id], onDelete: SetNull)
+  warehouseZone       WarehouseZone?            @relation(fields: [warehouseZoneId], references: [id], onDelete: SetNull)
+  supplier            Supplier?                 @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  stockMovements      StockMovement[]
+  transferLines       TransferLine[]
+  reservations        Reservation[]
+  invoiceItems        InvoiceItem[]
+  lifecycleEvents     AssetLifecycleEvent[]
+  custodyEvents       CustodyEvent[]
+  inventoryLocks      InventoryLock[]
+  priceHistory        InventoryPriceHistory[]
+  weightHistory       InventoryWeightHistory[]
+  adjustmentLines     InventoryAdjustmentLine[]
+  stockCountLines     StockCountLine[]
+  salesOrderLines     SalesOrderLine[]
+  salesReturnLines    SalesReturnLine[]
+  exchangeLines       SalesExchangeLine[]
+  buybackTransactions BuybackTransaction[]
+  goldCostRecords     GoldCostRecord[]
 
   @@unique([tenantId, assetId])
   @@unique([tenantId, serialNumber])
@@ -192,6 +197,7 @@ model Reservation {
   branch        Branch        @relation(fields: [branchId], references: [id], onDelete: Restrict)
   customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Restrict)
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+  salesOrders   SalesOrder[]
 
   @@unique([tenantId, reservationNo])
   @@index([tenantId])

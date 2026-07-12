@@ -130,6 +130,33 @@ model Tenant {
   stockCounts               StockCount[]
   inventoryApprovals        InventoryApproval[]
   hardwareDeviceProfiles    HardwareDeviceProfile[]
+  posSessions               PosSession[]
+  salesDocumentSequences    SalesDocumentSequence[]
+  salesReturns              SalesReturn[]
+  salesExchanges            SalesExchange[]
+  buybackTransactions       BuybackTransaction[]
+  loyaltyAccounts           LoyaltyAccount[]
+  loyaltyTransactions       LoyaltyTransaction[]
+  discountApprovals         DiscountApproval[]
+  invoiceTemplates          InvoiceTemplate[]
+  cashierQueueEntries       CashierQueueEntry[]
+  manualPriceOverrides      ManualPriceOverride[]
+  loyaltyProgramRules       LoyaltyProgramRule[]
+  salesEventLogs            SalesEventLog[]
+  chartOfAccounts           ChartOfAccount[]
+  fiscalYears               FiscalYear[]
+  accountingPeriods         AccountingPeriod[]
+  journalEntries            JournalEntry[]
+  accountingTransactions    AccountingTransaction[]
+  accountBalances           AccountBalance[]
+  cashRegisterShifts        CashRegisterShift[]
+  cashMovements             CashMovement[]
+  bankTransactions          BankTransaction[]
+  bankReconciliations       BankReconciliation[]
+  customerLedgerEntries     CustomerLedgerEntry[]
+  supplierLedgerEntries     SupplierLedgerEntry[]
+  expenseCategories         ExpenseCategory[]
+  goldCostRecords           GoldCostRecord[]
 
   @@index([status])
   @@index([deletedAt])
@@ -155,9 +182,10 @@ model Organization {
   updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  logoFile File?    @relation(fields: [logoFileId], references: [id], onDelete: SetNull)
-  branches Branch[]
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  logoFile    File?        @relation(fields: [logoFileId], references: [id], onDelete: SetNull)
+  branches    Branch[]
+  salesOrders SalesOrder[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
