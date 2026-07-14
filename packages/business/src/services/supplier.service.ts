@@ -16,6 +16,13 @@ const createSupplierSchema = z.object({
   taxId: z.string().max(50).optional().nullable(),
   paymentTerms: z.string().max(50).optional().nullable(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'BLOCKED']).optional(),
+  rating: z.number().min(0).max(5).optional().nullable(),
+  isPreferred: z.boolean().optional(),
+  isBlacklisted: z.boolean().optional(),
+  leadTimeDays: z.number().int().optional().nullable(),
+  deliverySlaDays: z.number().int().optional().nullable(),
+  creditLimit: z.number().optional().nullable(),
+  taxInformation: z.record(z.unknown()).optional().nullable(),
   notes: z.string().optional().nullable(),
   metadata: z.record(z.unknown()).optional(),
 });
@@ -68,6 +75,13 @@ export class SupplierService {
       taxId: data.taxId ?? null,
       paymentTerms: data.paymentTerms ?? null,
       status: data.status,
+      rating: data.rating ?? null,
+      isPreferred: data.isPreferred,
+      isBlacklisted: data.isBlacklisted,
+      leadTimeDays: data.leadTimeDays ?? null,
+      deliverySlaDays: data.deliverySlaDays ?? null,
+      creditLimit: data.creditLimit ?? null,
+      taxInformation: asJsonOptional(data.taxInformation),
       notes: data.notes ?? null,
       metadata: asJsonOptional(data.metadata) ?? {},
       ...(data.categoryId ? { category: { connect: { id: data.categoryId } } } : {}),
@@ -100,6 +114,13 @@ export class SupplierService {
       taxId: data.taxId,
       paymentTerms: data.paymentTerms,
       status: data.status,
+      rating: data.rating,
+      isPreferred: data.isPreferred,
+      isBlacklisted: data.isBlacklisted,
+      leadTimeDays: data.leadTimeDays,
+      deliverySlaDays: data.deliverySlaDays,
+      creditLimit: data.creditLimit,
+      taxInformation: asJsonOptional(data.taxInformation),
       notes: data.notes,
       metadata: asJsonOptional(data.metadata),
       ...(data.categoryId !== undefined
@@ -184,5 +205,70 @@ export class SupplierService {
       context,
     });
     return category;
+  }
+
+  listBankAccounts(tenantId: string, supplierId: string) {
+    return this.supplierRepository.listBankAccounts(tenantId, supplierId);
+  }
+
+  async addBankAccount(
+    tenantId: string,
+    supplierId: string,
+    input: unknown,
+    context?: AuditContext,
+  ) {
+    await assertFound(this.supplierRepository.findById(tenantId, supplierId), 'Supplier not found');
+    const schema = z.object({
+      bankName: z.string().min(1).max(150),
+      accountName: z.string().min(1).max(150),
+      accountNumber: z.string().max(50).optional().nullable(),
+      iban: z.string().max(50).optional().nullable(),
+      swiftCode: z.string().max(20).optional().nullable(),
+      currency: z.string().length(3).optional(),
+      isPrimary: z.boolean().optional(),
+    });
+    const data = parseInput(schema, input);
+    const account = await this.supplierRepository.addBankAccount(tenantId, {
+      supplier: { connect: { id: supplierId } },
+      ...data,
+    });
+    await this.auditService.log({
+      tenantId,
+      action: 'CREATE',
+      entityType: 'supplier_bank_account',
+      entityId: account.id,
+      newValues: account,
+      context,
+    });
+    return account;
+  }
+
+  listDocuments(tenantId: string, supplierId: string) {
+    return this.supplierRepository.listDocuments(tenantId, supplierId);
+  }
+
+  async addDocument(tenantId: string, supplierId: string, input: unknown, context?: AuditContext) {
+    await assertFound(this.supplierRepository.findById(tenantId, supplierId), 'Supplier not found');
+    const schema = z.object({
+      documentType: z.string().min(1).max(50),
+      fileName: z.string().min(1).max(255),
+      fileUrl: z.string().url().max(500),
+      expiresAt: z.coerce.date().optional().nullable(),
+      notes: z.string().optional().nullable(),
+    });
+    const data = parseInput(schema, input);
+    const document = await this.supplierRepository.addDocument(tenantId, {
+      supplier: { connect: { id: supplierId } },
+      ...data,
+    });
+    await this.auditService.log({
+      tenantId,
+      action: 'CREATE',
+      entityType: 'supplier_document',
+      entityId: document.id,
+      newValues: document,
+      context,
+    });
+    return document;
   }
 }

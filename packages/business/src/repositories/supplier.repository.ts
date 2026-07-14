@@ -11,6 +11,8 @@ export class SupplierRepository {
       include: {
         category: true,
         contacts: { where: activeOnly() },
+        bankAccounts: { where: activeOnly() },
+        documents: { where: activeOnly() },
       },
     });
   }
@@ -140,6 +142,30 @@ export class SupplierRepository {
     return this.prisma.supplierCategory.updateMany({
       where: { id, ...tenantScope(tenantId) },
       data: softDeleteData(),
+    });
+  }
+
+  listBankAccounts(tenantId: string, supplierId: string) {
+    return this.prisma.supplierBankAccount.findMany({
+      where: { supplierId, ...tenantScope(tenantId), ...activeOnly() },
+    });
+  }
+
+  addBankAccount(tenantId: string, data: Omit<Prisma.SupplierBankAccountCreateInput, 'tenant'>) {
+    return this.prisma.supplierBankAccount.create({
+      data: { ...data, tenant: { connect: { id: tenantId } } },
+    });
+  }
+
+  listDocuments(tenantId: string, supplierId: string) {
+    return this.prisma.supplierDocument.findMany({
+      where: { supplierId, ...tenantScope(tenantId), ...activeOnly() },
+    });
+  }
+
+  addDocument(tenantId: string, data: Omit<Prisma.SupplierDocumentCreateInput, 'tenant'>) {
+    return this.prisma.supplierDocument.create({
+      data: { ...data, tenant: { connect: { id: tenantId } } },
     });
   }
 }

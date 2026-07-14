@@ -1,0 +1,492 @@
+// ─── Phase 8: Purchasing, Procurement & Supplier Operations ────────────────────
+
+model PurchasingDocumentSequence {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  branchId     String?  @map("branch_id") @db.Uuid
+  documentType String   @map("document_type") @db.VarChar(30)
+  prefix       String   @db.VarChar(20)
+  currentValue Int      @default(0) @map("current_value")
+  padLength    Int      @default(6) @map("pad_length")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, branchId, documentType, prefix])
+  @@index([tenantId])
+  @@map("purchasing_document_sequences")
+}
+
+model PurchaseRequest {
+  id             String                @id @default(uuid()) @db.Uuid
+  tenantId       String                @map("tenant_id") @db.Uuid
+  branchId       String                @map("branch_id") @db.Uuid
+  requestNo      String                @map("request_no") @db.VarChar(30)
+  status         PurchaseRequestStatus @default(DRAFT)
+  requestedById  String?               @map("requested_by_id") @db.Uuid
+  neededByDate   DateTime?             @map("needed_by_date") @db.Date
+  currency       String                @default("SAR") @db.Char(3)
+  estimatedTotal Decimal               @default(0) @map("estimated_total") @db.Decimal(18, 4)
+  notes          String?               @db.Text
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?             @map("deleted_at") @db.Timestamptz(6)
+
+  tenant      Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch      Branch                @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  requestedBy Employee?             @relation("PurchaseRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  lines       PurchaseRequestLine[]
+  rfqs        PurchaseRfq[]
+  orders      PurchaseOrder[]
+
+  @@unique([tenantId, requestNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([status])
+  @@map("purchase_requests")
+}
+
+model PurchaseRequestLine {
+  id                String    @id @default(uuid()) @db.Uuid
+  purchaseRequestId String    @map("purchase_request_id") @db.Uuid
+  productId         String?   @map("product_id") @db.Uuid
+  lineNo            Int       @map("line_no")
+  description       String?   @db.VarChar(255)
+  quantity          Int       @default(1)
+  estimatedUnitCost Decimal   @default(0) @map("estimated_unit_cost") @db.Decimal(18, 4)
+  estimatedTotal    Decimal   @default(0) @map("estimated_total") @db.Decimal(18, 4)
+  notes             String?   @db.Text
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id], onDelete: Cascade)
+  product         Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@unique([purchaseRequestId, lineNo])
+  @@index([purchaseRequestId])
+  @@map("purchase_request_lines")
+}
+
+model PurchaseRfq {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.Uuid
+  branchId          String            @map("branch_id") @db.Uuid
+  purchaseRequestId String?           @map("purchase_request_id") @db.Uuid
+  rfqNo             String            @map("rfq_no") @db.VarChar(30)
+  status            PurchaseRfqStatus @default(DRAFT)
+  title             String            @db.VarChar(255)
+  dueDate           DateTime?         @map("due_date") @db.Date
+  notes             String?           @db.Text
+  createdById       String?           @map("created_by_id") @db.Uuid
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
+
+  tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch           Branch                @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  purchaseRequest  PurchaseRequest?      @relation(fields: [purchaseRequestId], references: [id], onDelete: SetNull)
+  createdBy        Employee?             @relation("PurchaseRfqCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lines            PurchaseRfqLine[]
+  invitedSuppliers PurchaseRfqSupplier[]
+  quotations       SupplierQuotation[]
+  orders           PurchaseOrder[]
+
+  @@unique([tenantId, rfqNo])
+  @@index([tenantId])
+  @@index([branchId])
+  @@index([purchaseRequestId])
+  @@index([status])
+  @@map("purchase_rfqs")
+}
+
+model PurchaseRfqLine {
+  id            String    @id @default(uuid()) @db.Uuid
+  purchaseRfqId String    @map("purchase_rfq_id") @db.Uuid
+  productId     String?   @map("product_id") @db.Uuid
+  lineNo        Int       @map("line_no")
+  description   String?   @db.VarChar(255)
+  quantity      Int       @default(1)
+  notes         String?   @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  purchaseRfq PurchaseRfq @relation(fields: [purchaseRfqId], references: [id], onDelete: Cascade)
+  product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@unique([purchaseRfqId, lineNo])
+  @@index([purchaseRfqId])
+  @@map("purchase_rfq_lines")
+}
+
+model PurchaseRfqSupplier {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  purchaseRfqId String    @map("purchase_rfq_id") @db.Uuid
+  supplierId    String    @map("supplier_id") @db.Uuid
+  sentAt        DateTime? @map("sent_at") @db.Timestamptz(6)
+  status        String    @default("INVITED") @db.VarChar(30)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchaseRfq PurchaseRfq @relation(fields: [purchaseRfqId], references: [id], onDelete: Cascade)
+  supplier    Supplier    @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+  @@unique([purchaseRfqId, supplierId])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@map("purchase_rfq_suppliers")
+}
+
+model SupplierQuotation {
+  id            String                  @id @default(uuid()) @db.Uuid
+  tenantId      String                  @map("tenant_id") @db.Uuid
+  branchId      String                  @map("branch_id") @db.Uuid
+  supplierId    String                  @map("supplier_id") @db.Uuid
+  purchaseRfqId String?                 @map("purchase_rfq_id") @db.Uuid
+  quotationNo   String                  @map("quotation_no") @db.VarChar(30)
+  status        SupplierQuotationStatus @default(DRAFT)
+  validUntil    DateTime?               @map("valid_until") @db.Date
+  currency      String                  @default("SAR") @db.Char(3)
+  subtotal      Decimal                 @default(0) @db.Decimal(18, 4)
+  taxAmount     Decimal                 @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount   Decimal                 @default(0) @map("total_amount") @db.Decimal(18, 4)
+  leadTimeDays  Int?                    @map("lead_time_days")
+  notes         String?                 @db.Text
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?               @map("deleted_at") @db.Timestamptz(6)
+
+  tenant      Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch      Branch                  @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  supplier    Supplier                @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseRfq PurchaseRfq?            @relation(fields: [purchaseRfqId], references: [id], onDelete: SetNull)
+  lines       SupplierQuotationLine[]
+  orders      PurchaseOrder[]
+
+  @@unique([tenantId, quotationNo])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("supplier_quotations")
+}
+
+model SupplierQuotationLine {
+  id                  String    @id @default(uuid()) @db.Uuid
+  supplierQuotationId String    @map("supplier_quotation_id") @db.Uuid
+  productId           String?   @map("product_id") @db.Uuid
+  lineNo              Int       @map("line_no")
+  description         String?   @db.VarChar(255)
+  quantity            Int       @default(1)
+  unitCost            Decimal   @map("unit_cost") @db.Decimal(18, 4)
+  totalCost           Decimal   @map("total_cost") @db.Decimal(18, 4)
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  supplierQuotation SupplierQuotation @relation(fields: [supplierQuotationId], references: [id], onDelete: Cascade)
+  product           Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@unique([supplierQuotationId, lineNo])
+  @@index([supplierQuotationId])
+  @@map("supplier_quotation_lines")
+}
+
+model GoodsReceipt {
+  id              String             @id @default(uuid()) @db.Uuid
+  tenantId        String             @map("tenant_id") @db.Uuid
+  branchId        String             @map("branch_id") @db.Uuid
+  purchaseOrderId String             @map("purchase_order_id") @db.Uuid
+  supplierId      String             @map("supplier_id") @db.Uuid
+  warehouseZoneId String?            @map("warehouse_zone_id") @db.Uuid
+  receiptNo       String             @map("receipt_no") @db.VarChar(30)
+  status          GoodsReceiptStatus @default(DRAFT)
+  receiptDate     DateTime           @map("receipt_date") @db.Date
+  receivedById    String?            @map("received_by_id") @db.Uuid
+  notes           String?            @db.Text
+  totalAmount     Decimal            @default(0) @map("total_amount") @db.Decimal(18, 4)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant             @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch             @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder      @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  supplier      Supplier           @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouseZone WarehouseZone?     @relation(fields: [warehouseZoneId], references: [id], onDelete: SetNull)
+  receivedBy    Employee?          @relation("GoodsReceiptReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
+  lines         GoodsReceiptLine[]
+  invoices      PurchaseInvoice[]
+  returns       PurchaseReturn[]
+
+  @@unique([tenantId, receiptNo])
+  @@index([tenantId])
+  @@index([purchaseOrderId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptLine {
+  id                  String     @id @default(uuid()) @db.Uuid
+  goodsReceiptId      String     @map("goods_receipt_id") @db.Uuid
+  purchaseOrderLineId String?    @map("purchase_order_line_id") @db.Uuid
+  productId           String     @map("product_id") @db.Uuid
+  inventoryItemId     String?    @map("inventory_item_id") @db.Uuid
+  lineNo              Int        @map("line_no")
+  quantity            Int        @default(1)
+  unitCost            Decimal    @map("unit_cost") @db.Decimal(18, 4)
+  totalCost           Decimal    @map("total_cost") @db.Decimal(18, 4)
+  weightGrams         Decimal?   @map("weight_grams") @db.Decimal(12, 4)
+  karat               GoldKarat?
+  goldRateAtPurchase  Decimal?   @map("gold_rate_at_purchase") @db.Decimal(12, 4)
+  notes               String?    @db.Text
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?  @map("deleted_at") @db.Timestamptz(6)
+
+  goodsReceipt      GoodsReceipt       @relation(fields: [goodsReceiptId], references: [id], onDelete: Cascade)
+  purchaseOrderLine PurchaseOrderLine? @relation(fields: [purchaseOrderLineId], references: [id], onDelete: SetNull)
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryItem     InventoryItem?     @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+
+  @@unique([goodsReceiptId, lineNo])
+  @@index([goodsReceiptId])
+  @@index([inventoryItemId])
+  @@map("goods_receipt_lines")
+}
+
+model PurchaseInvoice {
+  id                String                @id @default(uuid()) @db.Uuid
+  tenantId          String                @map("tenant_id") @db.Uuid
+  branchId          String                @map("branch_id") @db.Uuid
+  supplierId        String                @map("supplier_id") @db.Uuid
+  purchaseOrderId   String?               @map("purchase_order_id") @db.Uuid
+  goodsReceiptId    String?               @map("goods_receipt_id") @db.Uuid
+  invoiceNo         String                @map("invoice_no") @db.VarChar(30)
+  supplierInvoiceNo String?               @map("supplier_invoice_no") @db.VarChar(50)
+  status            PurchaseInvoiceStatus @default(DRAFT)
+  invoiceDate       DateTime              @map("invoice_date") @db.Date
+  dueDate           DateTime?             @map("due_date") @db.Date
+  currency          String                @default("SAR") @db.Char(3)
+  subtotal          Decimal               @default(0) @db.Decimal(18, 4)
+  taxAmount         Decimal               @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount       Decimal               @default(0) @map("total_amount") @db.Decimal(18, 4)
+  paidAmount        Decimal               @default(0) @map("paid_amount") @db.Decimal(18, 4)
+  notes             String?               @db.Text
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime?             @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch                @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  supplier      Supplier              @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder?        @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  goodsReceipt  GoodsReceipt?         @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+  lines         PurchaseInvoiceLine[]
+
+  @@unique([tenantId, invoiceNo])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_invoices")
+}
+
+model PurchaseInvoiceLine {
+  id                  String    @id @default(uuid()) @db.Uuid
+  purchaseInvoiceId   String    @map("purchase_invoice_id") @db.Uuid
+  purchaseOrderLineId String?   @map("purchase_order_line_id") @db.Uuid
+  productId           String?   @map("product_id") @db.Uuid
+  lineNo              Int       @map("line_no")
+  quantity            Int       @default(1)
+  unitCost            Decimal   @map("unit_cost") @db.Decimal(18, 4)
+  taxAmount           Decimal   @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalCost           Decimal   @map("total_cost") @db.Decimal(18, 4)
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  purchaseInvoice   PurchaseInvoice    @relation(fields: [purchaseInvoiceId], references: [id], onDelete: Cascade)
+  purchaseOrderLine PurchaseOrderLine? @relation(fields: [purchaseOrderLineId], references: [id], onDelete: SetNull)
+  product           Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@unique([purchaseInvoiceId, lineNo])
+  @@index([purchaseInvoiceId])
+  @@map("purchase_invoice_lines")
+}
+
+model PurchaseReturn {
+  id              String               @id @default(uuid()) @db.Uuid
+  tenantId        String               @map("tenant_id") @db.Uuid
+  branchId        String               @map("branch_id") @db.Uuid
+  supplierId      String               @map("supplier_id") @db.Uuid
+  purchaseOrderId String?              @map("purchase_order_id") @db.Uuid
+  goodsReceiptId  String?              @map("goods_receipt_id") @db.Uuid
+  returnNo        String               @map("return_no") @db.VarChar(30)
+  status          PurchaseReturnStatus @default(DRAFT)
+  returnDate      DateTime             @map("return_date") @db.Date
+  totalAmount     Decimal              @default(0) @map("total_amount") @db.Decimal(18, 4)
+  reason          String?              @db.Text
+  notes           String?              @db.Text
+  approvedById    String?              @map("approved_by_id") @db.Uuid
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?            @map("deleted_at") @db.Timestamptz(6)
+
+  tenant        Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch        Branch               @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  supplier      Supplier             @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder?       @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  goodsReceipt  GoodsReceipt?        @relation(fields: [goodsReceiptId], references: [id], onDelete: SetNull)
+  approvedBy    Employee?            @relation("PurchaseReturnApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines         PurchaseReturnLine[]
+
+  @@unique([tenantId, returnNo])
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("purchase_returns")
+}
+
+model PurchaseReturnLine {
+  id                  String    @id @default(uuid()) @db.Uuid
+  purchaseReturnId    String    @map("purchase_return_id") @db.Uuid
+  productId           String    @map("product_id") @db.Uuid
+  inventoryItemId     String?   @map("inventory_item_id") @db.Uuid
+  purchaseOrderLineId String?   @map("purchase_order_line_id") @db.Uuid
+  lineNo              Int       @map("line_no")
+  quantity            Int       @default(1)
+  unitCost            Decimal   @map("unit_cost") @db.Decimal(18, 4)
+  totalCost           Decimal   @map("total_cost") @db.Decimal(18, 4)
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  purchaseReturn    PurchaseReturn     @relation(fields: [purchaseReturnId], references: [id], onDelete: Cascade)
+  product           Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryItem     InventoryItem?     @relation(fields: [inventoryItemId], references: [id], onDelete: SetNull)
+  purchaseOrderLine PurchaseOrderLine? @relation(fields: [purchaseOrderLineId], references: [id], onDelete: SetNull)
+
+  @@unique([purchaseReturnId, lineNo])
+  @@index([purchaseReturnId])
+  @@map("purchase_return_lines")
+}
+
+model PurchaseApproval {
+  id           String                 @id @default(uuid()) @db.Uuid
+  tenantId     String                 @map("tenant_id") @db.Uuid
+  documentType PurchaseDocumentType   @map("document_type")
+  documentId   String                 @map("document_id") @db.Uuid
+  level        PurchaseApprovalLevel  @default(BRANCH_MANAGER)
+  status       PurchaseApprovalStatus @default(PENDING)
+  amount       Decimal                @default(0) @db.Decimal(18, 4)
+  approverId   String?                @map("approver_id") @db.Uuid
+  comments     String?                @db.Text
+  decidedAt    DateTime?              @map("decided_at") @db.Timestamptz(6)
+  createdAt    DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime               @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approver Employee? @relation("PurchaseApprovalApprover", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([documentType, documentId])
+  @@index([status])
+  @@map("purchase_approvals")
+}
+
+model PurchaseApprovalConfig {
+  id               String                @id @default(uuid()) @db.Uuid
+  tenantId         String                @map("tenant_id") @db.Uuid
+  branchId         String?               @map("branch_id") @db.Uuid
+  level            PurchaseApprovalLevel @default(BRANCH_MANAGER)
+  minAmount        Decimal               @default(0) @map("min_amount") @db.Decimal(18, 4)
+  maxAmount        Decimal?              @map("max_amount") @db.Decimal(18, 4)
+  autoApproveBelow Decimal?              @map("auto_approve_below") @db.Decimal(18, 4)
+  isActive         Boolean               @default(true) @map("is_active")
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([branchId])
+  @@map("purchase_approval_configs")
+}
+
+model SupplierBankAccount {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  supplierId    String    @map("supplier_id") @db.Uuid
+  bankName      String    @map("bank_name") @db.VarChar(150)
+  accountName   String    @map("account_name") @db.VarChar(150)
+  accountNumber String?   @map("account_number") @db.VarChar(50)
+  iban          String?   @db.VarChar(50)
+  swiftCode     String?   @map("swift_code") @db.VarChar(20)
+  currency      String    @default("SAR") @db.Char(3)
+  isPrimary     Boolean   @default(false) @map("is_primary")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([supplierId])
+  @@map("supplier_bank_accounts")
+}
+
+model SupplierDocument {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  supplierId   String    @map("supplier_id") @db.Uuid
+  documentType String    @map("document_type") @db.VarChar(50)
+  fileName     String    @map("file_name") @db.VarChar(255)
+  fileUrl      String    @map("file_url") @db.VarChar(500)
+  expiresAt    DateTime? @map("expires_at") @db.Timestamptz(6)
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([supplierId])
+  @@map("supplier_documents")
+}
+
+model SupplierPerformanceMetric {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  supplierId       String   @map("supplier_id") @db.Uuid
+  periodStart      DateTime @map("period_start") @db.Date
+  periodEnd        DateTime @map("period_end") @db.Date
+  totalOrders      Int      @default(0) @map("total_orders")
+  totalAmount      Decimal  @default(0) @map("total_amount") @db.Decimal(18, 4)
+  onTimeDeliveries Int      @default(0) @map("on_time_deliveries")
+  lateDeliveries   Int      @default(0) @map("late_deliveries")
+  avgLeadTimeDays  Decimal? @map("avg_lead_time_days") @db.Decimal(8, 2)
+  qualityScore     Decimal? @map("quality_score") @db.Decimal(5, 2)
+  returnRate       Decimal? @map("return_rate") @db.Decimal(5, 4)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([supplierId])
+  @@index([periodStart, periodEnd])
+  @@map("supplier_performance_metrics")
+}

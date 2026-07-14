@@ -17,6 +17,7 @@ const MODULES = [
   'crm',
   'suppliers',
   'pricing',
+  'purchasing',
 ];
 
 const ACTIONS = [

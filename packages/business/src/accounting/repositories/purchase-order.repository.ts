@@ -18,6 +18,7 @@ export class PurchaseOrderRepository {
       supplierId?: string;
       branchId?: string;
       status?: string;
+      purchaseRequestId?: string;
       skip?: number;
       take?: number;
     },
@@ -28,6 +29,7 @@ export class PurchaseOrderRepository {
         ...(filters?.supplierId ? { supplierId: filters.supplierId } : {}),
         ...(filters?.branchId ? { branchId: filters.branchId } : {}),
         ...(filters?.status ? { status: filters.status as never } : {}),
+        ...(filters?.purchaseRequestId ? { purchaseRequestId: filters.purchaseRequestId } : {}),
       },
       include: { lines: true, supplier: true },
       orderBy: { orderDate: 'desc' },
@@ -40,6 +42,40 @@ export class PurchaseOrderRepository {
     return this.prisma.purchaseOrder.create({
       data: { ...data, tenant: { connect: { id: tenantId } } },
       include: { lines: true },
+    });
+  }
+
+  createLine(
+    purchaseOrderId: string,
+    data: Omit<Prisma.PurchaseOrderLineCreateInput, 'purchaseOrder'>,
+  ) {
+    return this.prisma.purchaseOrderLine.create({
+      data: { ...data, purchaseOrder: { connect: { id: purchaseOrderId } } },
+    });
+  }
+
+  async updateLine(
+    purchaseOrderId: string,
+    lineId: string,
+    data: Prisma.PurchaseOrderLineUpdateInput,
+  ) {
+    return this.prisma.purchaseOrderLine.updateMany({
+      where: { id: lineId, purchaseOrderId },
+      data,
+    });
+  }
+
+  incrementReceivedQty(lineId: string, quantity: number) {
+    return this.prisma.purchaseOrderLine.update({
+      where: { id: lineId },
+      data: { receivedQty: { increment: quantity } },
+    });
+  }
+
+  incrementBilledQty(lineId: string, quantity: number) {
+    return this.prisma.purchaseOrderLine.update({
+      where: { id: lineId },
+      data: { billedQty: { increment: quantity } },
     });
   }
 

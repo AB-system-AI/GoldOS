@@ -133,6 +133,87 @@ enum PurchaseOrderStatus {
   CLOSED
 }
 
+enum PurchaseRequestStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  CONVERTED
+}
+
+enum PurchaseRfqStatus {
+  DRAFT
+  SENT
+  QUOTED
+  CLOSED
+  CANCELLED
+}
+
+enum SupplierQuotationStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum GoodsReceiptStatus {
+  DRAFT
+  SUBMITTED
+  RECEIVED
+  CANCELLED
+}
+
+enum PurchaseInvoiceStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PARTIALLY_PAID
+  PAID
+  VOIDED
+  CANCELLED
+}
+
+enum PurchaseReturnStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum PurchaseBillingStatus {
+  UNBILLED
+  PARTIALLY_BILLED
+  BILLED
+}
+
+enum PurchaseApprovalLevel {
+  BRANCH_MANAGER
+  FINANCE
+  OWNER
+  AUTO
+}
+
+enum PurchaseApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+enum PurchaseDocumentType {
+  PURCHASE_REQUEST
+  PURCHASE_RFQ
+  SUPPLIER_QUOTATION
+  PURCHASE_ORDER
+  GOODS_RECEIPT
+  PURCHASE_INVOICE
+  PURCHASE_RETURN
+}
+
 enum SalesOrderStatus {
   DRAFT
   PENDING_PAYMENT
@@ -741,6 +822,9 @@ enum AccountingPeriodStatus {
 enum AccountingReferenceType {
   SALES_INVOICE
   PURCHASE_ORDER
+  GOODS_RECEIPT
+  PURCHASE_INVOICE
+  PURCHASE_RETURN
   PAYMENT
   EXPENSE
   BUYBACK
@@ -764,6 +848,7 @@ enum LedgerEntryType {
   DEBIT_NOTE
   PURCHASE
   SUPPLIER_PAYMENT
+  SUPPLIER_CREDIT
   ADJUSTMENT
   OPENING_BALANCE
 }

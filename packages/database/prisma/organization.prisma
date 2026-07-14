@@ -23,57 +23,65 @@ model Branch {
   updatedAt                DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt                DateTime?    @map("deleted_at") @db.Timestamptz(6)
 
-  tenant                 Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  manager                Employee?               @relation("BranchManager", fields: [managerId], references: [id], onDelete: SetNull)
-  defaultWarehouseBranch Branch?                 @relation("BranchDefaultWarehouse", fields: [defaultWarehouseBranchId], references: [id], onDelete: SetNull)
-  warehouseForBranches   Branch[]                @relation("BranchDefaultWarehouse")
-  userBranches           UserBranch[]
-  devices                Device[]
-  employees              Employee[]
-  employeeBranches       EmployeeBranch[]
-  employmentHistory      EmploymentHistory[]
-  branchCurrencies       BranchCurrency[]
-  workshops              Workshop[]
-  inventoryItems         InventoryItem[]
-  transfersFrom          Transfer[]              @relation("TransferFromBranch")
-  transfersTo            Transfer[]              @relation("TransferToBranch")
-  reservations           Reservation[]
-  purchaseOrders         PurchaseOrder[]
-  salesOrders            SalesOrder[]
-  invoices               Invoice[]
-  cashRegisters          CashRegister[]
-  manufacturingOrders    ManufacturingOrder[]
-  repairOrders           RepairOrder[]
-  barcodeScans           BarcodeScan[]
-  thermalPrinters        ThermalPrinter[]
-  employeeInvitations    EmployeeInvitation[]
-  warehouseZones         WarehouseZone[]
-  stockMovements         StockMovement[]
-  lifecycleEvents        AssetLifecycleEvent[]
-  custodyEvents          CustodyEvent[]
-  inventoryAdjustments   InventoryAdjustment[]
-  stockCounts            StockCount[]
-  hardwareDeviceProfiles HardwareDeviceProfile[]
-  posSessions            PosSession[]
-  salesReturns           SalesReturn[]
-  salesExchanges         SalesExchange[]
-  buybackTransactions    BuybackTransaction[]
-  payments               Payment[]
-  salesDocumentSequences SalesDocumentSequence[]
-  discountApprovals      DiscountApproval[]
-  invoiceTemplates       InvoiceTemplate[]
-  cashierQueueEntries    CashierQueueEntry[]
-  manualPriceOverrides   ManualPriceOverride[]
-  salesEventLogs         SalesEventLog[]
-  chartOfAccounts        ChartOfAccount[]
-  journalEntries         JournalEntry[]
-  accountBalances        AccountBalance[]
-  cashRegisterShifts     CashRegisterShift[]
-  cashMovements          CashMovement[]
-  customerLedgerEntries  CustomerLedgerEntry[]
-  supplierLedgerEntries  SupplierLedgerEntry[]
-  expenses               Expense[]
+  tenant                      Tenant                       @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  organization                Organization                 @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  manager                     Employee?                    @relation("BranchManager", fields: [managerId], references: [id], onDelete: SetNull)
+  defaultWarehouseBranch      Branch?                      @relation("BranchDefaultWarehouse", fields: [defaultWarehouseBranchId], references: [id], onDelete: SetNull)
+  warehouseForBranches        Branch[]                     @relation("BranchDefaultWarehouse")
+  userBranches                UserBranch[]
+  devices                     Device[]
+  employees                   Employee[]
+  employeeBranches            EmployeeBranch[]
+  employmentHistory           EmploymentHistory[]
+  branchCurrencies            BranchCurrency[]
+  workshops                   Workshop[]
+  inventoryItems              InventoryItem[]
+  transfersFrom               Transfer[]                   @relation("TransferFromBranch")
+  transfersTo                 Transfer[]                   @relation("TransferToBranch")
+  reservations                Reservation[]
+  purchaseOrders              PurchaseOrder[]
+  salesOrders                 SalesOrder[]
+  invoices                    Invoice[]
+  cashRegisters               CashRegister[]
+  manufacturingOrders         ManufacturingOrder[]
+  repairOrders                RepairOrder[]
+  barcodeScans                BarcodeScan[]
+  thermalPrinters             ThermalPrinter[]
+  employeeInvitations         EmployeeInvitation[]
+  warehouseZones              WarehouseZone[]
+  stockMovements              StockMovement[]
+  lifecycleEvents             AssetLifecycleEvent[]
+  custodyEvents               CustodyEvent[]
+  inventoryAdjustments        InventoryAdjustment[]
+  stockCounts                 StockCount[]
+  hardwareDeviceProfiles      HardwareDeviceProfile[]
+  posSessions                 PosSession[]
+  salesReturns                SalesReturn[]
+  salesExchanges              SalesExchange[]
+  buybackTransactions         BuybackTransaction[]
+  payments                    Payment[]
+  salesDocumentSequences      SalesDocumentSequence[]
+  discountApprovals           DiscountApproval[]
+  invoiceTemplates            InvoiceTemplate[]
+  cashierQueueEntries         CashierQueueEntry[]
+  manualPriceOverrides        ManualPriceOverride[]
+  salesEventLogs              SalesEventLog[]
+  chartOfAccounts             ChartOfAccount[]
+  journalEntries              JournalEntry[]
+  accountBalances             AccountBalance[]
+  cashRegisterShifts          CashRegisterShift[]
+  cashMovements               CashMovement[]
+  customerLedgerEntries       CustomerLedgerEntry[]
+  supplierLedgerEntries       SupplierLedgerEntry[]
+  expenses                    Expense[]
+  purchasingDocumentSequences PurchasingDocumentSequence[]
+  purchaseRequests            PurchaseRequest[]
+  purchaseRfqs                PurchaseRfq[]
+  supplierQuotations          SupplierQuotation[]
+  goodsReceipts               GoodsReceipt[]
+  purchaseInvoices            PurchaseInvoice[]
+  purchaseReturns             PurchaseReturn[]
+  purchaseApprovalConfigs     PurchaseApprovalConfig[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -160,6 +168,13 @@ model Employee {
   cashMovementsTo            CashMovement[]             @relation("CashMovementTo")
   expensesApproved           Expense[]                  @relation("ExpenseApprover")
   bankReconciliations        BankReconciliation[]
+  purchaseRequestsRequested  PurchaseRequest[]          @relation("PurchaseRequestRequester")
+  purchaseRfqsCreated        PurchaseRfq[]              @relation("PurchaseRfqCreator")
+  purchaseOrdersRequested    PurchaseOrder[]            @relation("PurchaseOrderRequester")
+  purchaseOrdersApproved     PurchaseOrder[]            @relation("PurchaseOrderApprover")
+  goodsReceiptsReceived      GoodsReceipt[]             @relation("GoodsReceiptReceiver")
+  purchaseReturnsApproved    PurchaseReturn[]           @relation("PurchaseReturnApprover")
+  purchaseApprovals          PurchaseApproval[]         @relation("PurchaseApprovalApprover")
 
   @@unique([tenantId, employeeNo])
   @@index([tenantId])

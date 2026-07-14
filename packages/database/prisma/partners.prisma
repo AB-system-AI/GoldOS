@@ -61,36 +61,53 @@ model Customer {
 }
 
 model Supplier {
-  id           String        @id @default(uuid()) @db.Uuid
-  tenantId     String        @map("tenant_id") @db.Uuid
-  categoryId   String?       @map("category_id") @db.Uuid
-  supplierNo   String        @map("supplier_no") @db.VarChar(30)
-  supplierType SupplierType  @default(LOCAL) @map("supplier_type")
-  name         String        @db.VarChar(255)
-  contactName  String?       @map("contact_name") @db.VarChar(150)
-  email        String?       @db.VarChar(255)
-  phone        String?       @db.VarChar(30)
-  taxId        String?       @map("tax_id") @db.VarChar(50)
-  paymentTerms String?       @map("payment_terms") @db.VarChar(50)
-  status       PartnerStatus @default(ACTIVE)
-  notes        String?       @db.Text
-  metadata     Json          @default("{}")
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  id              String        @id @default(uuid()) @db.Uuid
+  tenantId        String        @map("tenant_id") @db.Uuid
+  categoryId      String?       @map("category_id") @db.Uuid
+  supplierNo      String        @map("supplier_no") @db.VarChar(30)
+  supplierType    SupplierType  @default(LOCAL) @map("supplier_type")
+  name            String        @db.VarChar(255)
+  contactName     String?       @map("contact_name") @db.VarChar(150)
+  email           String?       @db.VarChar(255)
+  phone           String?       @db.VarChar(30)
+  taxId           String?       @map("tax_id") @db.VarChar(50)
+  paymentTerms    String?       @map("payment_terms") @db.VarChar(50)
+  status          PartnerStatus @default(ACTIVE)
+  rating          Decimal?      @db.Decimal(3, 2)
+  isPreferred     Boolean       @default(false) @map("is_preferred")
+  isBlacklisted   Boolean       @default(false) @map("is_blacklisted")
+  leadTimeDays    Int?          @map("lead_time_days")
+  deliverySlaDays Int?          @map("delivery_sla_days")
+  creditLimit     Decimal?      @map("credit_limit") @db.Decimal(18, 4)
+  taxInformation  Json?         @map("tax_information")
+  notes           String?       @db.Text
+  metadata        Json          @default("{}")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?     @map("deleted_at") @db.Timestamptz(6)
 
-  tenant             Tenant                @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  category           SupplierCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tenant             Tenant                      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category           SupplierCategory?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   contacts           SupplierContact[]
+  bankAccounts       SupplierBankAccount[]
+  documents          SupplierDocument[]
+  performanceMetrics SupplierPerformanceMetric[]
+  rfqInvitations     PurchaseRfqSupplier[]
+  quotations         SupplierQuotation[]
   purchaseOrders     PurchaseOrder[]
+  goodsReceipts      GoodsReceipt[]
+  purchaseInvoices   PurchaseInvoice[]
+  purchaseReturns    PurchaseReturn[]
   inventoryItems     InventoryItem[]
-  outstandingBalance Decimal               @default(0) @map("outstanding_balance") @db.Decimal(18, 4)
+  outstandingBalance Decimal                     @default(0) @map("outstanding_balance") @db.Decimal(18, 4)
   ledgerEntries      SupplierLedgerEntry[]
   journalLines       JournalLine[]
 
   @@unique([tenantId, supplierNo])
   @@index([tenantId])
   @@index([tenantId, deletedAt])
+  @@index([isPreferred])
+  @@index([isBlacklisted])
   @@map("suppliers")
 }
 

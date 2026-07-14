@@ -106,7 +106,7 @@ export class SupplierLedgerService {
     params: {
       supplierId: string;
       branchId?: string | null;
-      entryType: 'PURCHASE' | 'SUPPLIER_PAYMENT' | 'ADJUSTMENT';
+      entryType: 'PURCHASE' | 'SUPPLIER_PAYMENT' | 'SUPPLIER_CREDIT' | 'ADJUSTMENT';
       referenceType: string;
       referenceId: string;
       debit: number;

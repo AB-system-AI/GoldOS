@@ -107,6 +107,136 @@ export function buildPurchaseRule(params: {
   };
 }
 
+export function buildGoodsReceiptRule(params: {
+  totalAmount: number;
+  inventoryAccountCode?: string;
+  payableAccountCode?: string;
+}): AccountingRuleResult {
+  return {
+    referenceType: 'GOODS_RECEIPT',
+    description: 'Goods receipt posting',
+    lines: [
+      {
+        accountCode: params.inventoryAccountCode ?? '1300',
+        debit: params.totalAmount,
+        description: 'Inventory received',
+      },
+      {
+        accountCode: params.payableAccountCode ?? '2100',
+        credit: params.totalAmount,
+        description: 'Supplier payable (GRN)',
+      },
+    ],
+  };
+}
+
+export function buildPurchaseInvoiceRule(params: {
+  totalAmount: number;
+  taxAmount?: number;
+  inventoryAccountCode?: string;
+  payableAccountCode?: string;
+  taxAccountCode?: string;
+}): AccountingRuleResult {
+  const tax = params.taxAmount ?? 0;
+  const net = params.totalAmount - tax;
+  const lines: AccountingRuleLine[] = [
+    {
+      accountCode: params.inventoryAccountCode ?? '1300',
+      debit: net,
+      description: 'Inventory / expense accrual',
+    },
+  ];
+  if (tax > 0) {
+    lines.push({
+      accountCode: params.taxAccountCode ?? '1400',
+      debit: tax,
+      description: 'Input VAT',
+    });
+  }
+  lines.push({
+    accountCode: params.payableAccountCode ?? '2100',
+    credit: params.totalAmount,
+    description: 'Supplier payable',
+  });
+  return {
+    referenceType: 'PURCHASE_INVOICE',
+    description: 'Supplier invoice posting',
+    lines,
+  };
+}
+
+export function buildPurchaseInvoiceWithGrnRule(params: {
+  taxAmount: number;
+  payableAccountCode?: string;
+  taxAccountCode?: string;
+}): AccountingRuleResult | null {
+  if (params.taxAmount <= 0) {
+    return null;
+  }
+  return {
+    referenceType: 'PURCHASE_INVOICE',
+    description: 'Supplier invoice tax posting (3-way match)',
+    lines: [
+      {
+        accountCode: params.taxAccountCode ?? '1400',
+        debit: params.taxAmount,
+        description: 'Input VAT',
+      },
+      {
+        accountCode: params.payableAccountCode ?? '2100',
+        credit: params.taxAmount,
+        description: 'Supplier payable (tax)',
+      },
+    ],
+  };
+}
+
+export function buildPurchaseReturnRule(params: {
+  totalAmount: number;
+  inventoryAccountCode?: string;
+  payableAccountCode?: string;
+}): AccountingRuleResult {
+  return {
+    referenceType: 'PURCHASE_RETURN',
+    description: 'Purchase return reversal',
+    lines: [
+      {
+        accountCode: params.payableAccountCode ?? '2100',
+        debit: params.totalAmount,
+        description: 'Reduce supplier payable',
+      },
+      {
+        accountCode: params.inventoryAccountCode ?? '1300',
+        credit: params.totalAmount,
+        description: 'Inventory returned',
+      },
+    ],
+  };
+}
+
+export function buildPurchaseCancellationRule(params: {
+  totalAmount: number;
+  payableAccountCode?: string;
+  accrualAccountCode?: string;
+}): AccountingRuleResult {
+  return {
+    referenceType: 'PURCHASE_ORDER',
+    description: 'Purchase cancellation reversal',
+    lines: [
+      {
+        accountCode: params.payableAccountCode ?? '2100',
+        debit: params.totalAmount,
+        description: 'Reverse supplier payable',
+      },
+      {
+        accountCode: params.accrualAccountCode ?? '1300',
+        credit: params.totalAmount,
+        description: 'Reverse purchase accrual',
+      },
+    ],
+  };
+}
+
 export function buildSupplierPaymentRule(params: {
   amount: number;
   payableAccountCode?: string;

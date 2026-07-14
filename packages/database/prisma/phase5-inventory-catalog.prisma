@@ -130,6 +130,8 @@ model WarehouseZone {
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
   inventoryItems InventoryItem[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
 
   @@unique([tenantId, branchId, code])
   @@index([tenantId])

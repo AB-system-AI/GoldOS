@@ -1,32 +1,51 @@
 // ─── Purchase & Sales Orders ─────────────────────────────────────────────────
 
 model PurchaseOrder {
-  id           String              @id @default(uuid()) @db.Uuid
-  tenantId     String              @map("tenant_id") @db.Uuid
-  branchId     String              @map("branch_id") @db.Uuid
-  supplierId   String              @map("supplier_id") @db.Uuid
-  orderNo      String              @map("order_no") @db.VarChar(30)
-  status       PurchaseOrderStatus @default(DRAFT)
-  orderDate    DateTime            @map("order_date") @db.Date
-  expectedDate DateTime?           @map("expected_date") @db.Date
-  currency     String              @default("SAR") @db.Char(3)
-  subtotal     Decimal             @default(0) @db.Decimal(18, 4)
-  taxAmount    Decimal             @default(0) @map("tax_amount") @db.Decimal(18, 4)
-  totalAmount  Decimal             @default(0) @map("total_amount") @db.Decimal(18, 4)
-  notes        String?             @db.Text
-  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  id                  String                @id @default(uuid()) @db.Uuid
+  tenantId            String                @map("tenant_id") @db.Uuid
+  branchId            String                @map("branch_id") @db.Uuid
+  supplierId          String                @map("supplier_id") @db.Uuid
+  purchaseRequestId   String?               @map("purchase_request_id") @db.Uuid
+  purchaseRfqId       String?               @map("purchase_rfq_id") @db.Uuid
+  supplierQuotationId String?               @map("supplier_quotation_id") @db.Uuid
+  warehouseZoneId     String?               @map("warehouse_zone_id") @db.Uuid
+  requestedById       String?               @map("requested_by_id") @db.Uuid
+  approvedById        String?               @map("approved_by_id") @db.Uuid
+  orderNo             String                @map("order_no") @db.VarChar(30)
+  status              PurchaseOrderStatus   @default(DRAFT)
+  billingStatus       PurchaseBillingStatus @default(UNBILLED) @map("billing_status")
+  orderDate           DateTime              @map("order_date") @db.Date
+  expectedDate        DateTime?             @map("expected_date") @db.Date
+  currency            String                @default("SAR") @db.Char(3)
+  subtotal            Decimal               @default(0) @db.Decimal(18, 4)
+  taxAmount           Decimal               @default(0) @map("tax_amount") @db.Decimal(18, 4)
+  totalAmount         Decimal               @default(0) @map("total_amount") @db.Decimal(18, 4)
+  invoicedAmount      Decimal               @default(0) @map("invoiced_amount") @db.Decimal(18, 4)
+  paidAmount          Decimal               @default(0) @map("paid_amount") @db.Decimal(18, 4)
+  notes               String?               @db.Text
+  createdAt           DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt           DateTime?             @map("deleted_at") @db.Timestamptz(6)
 
-  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  branch   Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  supplier Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  lines    PurchaseOrderLine[]
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch            Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  supplier          Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  purchaseRequest   PurchaseRequest?    @relation(fields: [purchaseRequestId], references: [id], onDelete: SetNull)
+  purchaseRfq       PurchaseRfq?        @relation(fields: [purchaseRfqId], references: [id], onDelete: SetNull)
+  supplierQuotation SupplierQuotation?  @relation(fields: [supplierQuotationId], references: [id], onDelete: SetNull)
+  warehouseZone     WarehouseZone?      @relation(fields: [warehouseZoneId], references: [id], onDelete: SetNull)
+  requestedBy       Employee?           @relation("PurchaseOrderRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy        Employee?           @relation("PurchaseOrderApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines             PurchaseOrderLine[]
+  goodsReceipts     GoodsReceipt[]
+  purchaseInvoices  PurchaseInvoice[]
+  purchaseReturns   PurchaseReturn[]
 
   @@unique([tenantId, orderNo])
   @@index([tenantId])
   @@index([supplierId])
   @@index([status])
+  @@index([billingStatus])
   @@index([orderDate])
   @@map("purchase_orders")
 }
@@ -40,13 +59,17 @@ model PurchaseOrderLine {
   unitCost        Decimal   @map("unit_cost") @db.Decimal(18, 4)
   totalCost       Decimal   @map("total_cost") @db.Decimal(18, 4)
   receivedQty     Int       @default(0) @map("received_qty")
+  billedQty       Int       @default(0) @map("billed_qty")
   notes           String?   @db.Text
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  purchaseOrder        PurchaseOrder         @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product              Product               @relation(fields: [productId], references: [id], onDelete: Restrict)
+  goodsReceiptLines    GoodsReceiptLine[]
+  purchaseInvoiceLines PurchaseInvoiceLine[]
+  purchaseReturnLines  PurchaseReturnLine[]
 
   @@unique([purchaseOrderId, lineNo])
   @@index([purchaseOrderId])

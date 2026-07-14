@@ -97,6 +97,20 @@ export class SearchRepository {
         return this.searchInvoices(tenantId, term, branchId, take);
       case 'SALES_ORDER':
         return this.searchSalesOrders(tenantId, term, branchId, take);
+      case 'PURCHASE_REQUEST':
+        return this.searchPurchaseRequests(tenantId, term, branchId, take);
+      case 'PURCHASE_RFQ':
+        return this.searchPurchaseRfqs(tenantId, term, branchId, take);
+      case 'SUPPLIER_QUOTATION':
+        return this.searchSupplierQuotations(tenantId, term, branchId, take);
+      case 'PURCHASE_ORDER':
+        return this.searchPurchaseOrders(tenantId, term, branchId, take);
+      case 'GOODS_RECEIPT':
+        return this.searchGoodsReceipts(tenantId, term, branchId, take);
+      case 'PURCHASE_INVOICE':
+        return this.searchPurchaseInvoices(tenantId, term, branchId, take);
+      case 'PURCHASE_RETURN':
+        return this.searchPurchaseReturns(tenantId, term, branchId, take);
       case 'BRANCH':
         return this.searchBranches(tenantId, term, take);
       case 'WORKSHOP':
@@ -361,8 +375,10 @@ export class SearchRepository {
         ...tenantScope(tenantId),
         ...(branchId ? { branchId } : {}),
         OR: [
+          { assetId: { contains: term, mode: 'insensitive' } },
           { serialNumber: { contains: term, mode: 'insensitive' } },
           { barcode: { contains: term, mode: 'insensitive' } },
+          { qrCode: { contains: term, mode: 'insensitive' } },
           { product: { name: { contains: term, mode: 'insensitive' } } },
         ],
       },
@@ -374,10 +390,227 @@ export class SearchRepository {
     return rows.map((row) => ({
       entityType: 'INVENTORY',
       entityId: row.id,
-      title: row.serialNumber,
+      title: row.assetId,
       subtitle: row.product.name,
       branchId: row.branchId,
-      metadata: { status: row.status, productId: row.productId },
+      metadata: { status: row.status, productId: row.productId, barcode: row.barcode },
+      score: 0.9,
+    }));
+  }
+
+  private async searchPurchaseRequests(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.purchaseRequest.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { requestNo: { contains: term, mode: 'insensitive' } },
+          { notes: { contains: term, mode: 'insensitive' } },
+        ],
+      },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'PURCHASE_REQUEST',
+      entityId: row.id,
+      title: row.requestNo,
+      subtitle: row.status,
+      branchId: row.branchId,
+      metadata: { status: row.status },
+      score: 0.9,
+    }));
+  }
+
+  private async searchPurchaseRfqs(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.purchaseRfq.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { rfqNo: { contains: term, mode: 'insensitive' } },
+          { title: { contains: term, mode: 'insensitive' } },
+        ],
+      },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'PURCHASE_RFQ',
+      entityId: row.id,
+      title: row.rfqNo,
+      subtitle: row.title,
+      branchId: row.branchId,
+      metadata: { status: row.status },
+      score: 0.9,
+    }));
+  }
+
+  private async searchSupplierQuotations(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.supplierQuotation.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { quotationNo: { contains: term, mode: 'insensitive' } },
+          { supplier: { name: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { supplier: true },
+      take,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'SUPPLIER_QUOTATION',
+      entityId: row.id,
+      title: row.quotationNo,
+      subtitle: row.supplier.name,
+      branchId: row.branchId,
+      metadata: { status: row.status },
+      score: 0.9,
+    }));
+  }
+
+  private async searchPurchaseOrders(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.purchaseOrder.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { orderNo: { contains: term, mode: 'insensitive' } },
+          { supplier: { name: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { supplier: true },
+      take,
+      orderBy: { orderDate: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'PURCHASE_ORDER',
+      entityId: row.id,
+      title: row.orderNo,
+      subtitle: row.supplier.name,
+      branchId: row.branchId,
+      metadata: { status: row.status, billingStatus: row.billingStatus },
+      score: 0.9,
+    }));
+  }
+
+  private async searchGoodsReceipts(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.goodsReceipt.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { receiptNo: { contains: term, mode: 'insensitive' } },
+          { supplier: { name: { contains: term, mode: 'insensitive' } } },
+          { purchaseOrder: { orderNo: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { supplier: true, purchaseOrder: true },
+      take,
+      orderBy: { receiptDate: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'GOODS_RECEIPT',
+      entityId: row.id,
+      title: row.receiptNo,
+      subtitle: row.supplier.name,
+      branchId: row.branchId,
+      metadata: { status: row.status, purchaseOrderNo: row.purchaseOrder.orderNo },
+      score: 0.9,
+    }));
+  }
+
+  private async searchPurchaseInvoices(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.purchaseInvoice.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { invoiceNo: { contains: term, mode: 'insensitive' } },
+          { supplierInvoiceNo: { contains: term, mode: 'insensitive' } },
+          { supplier: { name: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { supplier: true },
+      take,
+      orderBy: { invoiceDate: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'PURCHASE_INVOICE',
+      entityId: row.id,
+      title: row.invoiceNo,
+      subtitle: row.supplier.name,
+      branchId: row.branchId,
+      metadata: { status: row.status, supplierInvoiceNo: row.supplierInvoiceNo },
+      score: 0.9,
+    }));
+  }
+
+  private async searchPurchaseReturns(
+    tenantId: string,
+    term: string,
+    branchId: string | undefined,
+    take: number,
+  ): Promise<GlobalSearchHit[]> {
+    const rows = await this.prisma.purchaseReturn.findMany({
+      where: {
+        ...tenantScope(tenantId),
+        ...(branchId ? { branchId } : {}),
+        OR: [
+          { returnNo: { contains: term, mode: 'insensitive' } },
+          { supplier: { name: { contains: term, mode: 'insensitive' } } },
+        ],
+      },
+      include: { supplier: true },
+      take,
+      orderBy: { returnDate: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      entityType: 'PURCHASE_RETURN',
+      entityId: row.id,
+      title: row.returnNo,
+      subtitle: row.supplier.name,
+      branchId: row.branchId,
+      metadata: { status: row.status },
       score: 0.9,
     }));
   }

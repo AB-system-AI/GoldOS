@@ -66,23 +66,29 @@ model Product {
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt         DateTime?         @map("deleted_at") @db.Timestamptz(6)
 
-  tenant             Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  category           Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  brand              Brand?                  @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  collection         Collection?             @relation(fields: [collectionId], references: [id], onDelete: SetNull)
-  manufacturer       Manufacturer?           @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
-  goldItem           GoldItem?
-  diamondItem        DiamondItem?
-  gemstone           Gemstone?
-  productTags        ProductTagAssignment[]
-  attributeValues    ProductAttributeValue[]
-  inventoryItems     InventoryItem[]
-  purchaseOrderLines PurchaseOrderLine[]
-  salesOrderLines    SalesOrderLine[]
-  invoiceItems       InvoiceItem[]
-  exchangeLines      SalesExchangeLine[]
-  certificates       Certificate[]
-  goldCostRecords    GoldCostRecord[]
+  tenant                 Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category               Category?               @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand                  Brand?                  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  collection             Collection?             @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  manufacturer           Manufacturer?           @relation(fields: [manufacturerId], references: [id], onDelete: SetNull)
+  goldItem               GoldItem?
+  diamondItem            DiamondItem?
+  gemstone               Gemstone?
+  productTags            ProductTagAssignment[]
+  attributeValues        ProductAttributeValue[]
+  inventoryItems         InventoryItem[]
+  purchaseOrderLines     PurchaseOrderLine[]
+  purchaseRequestLines   PurchaseRequestLine[]
+  purchaseRfqLines       PurchaseRfqLine[]
+  supplierQuotationLines SupplierQuotationLine[]
+  goodsReceiptLines      GoodsReceiptLine[]
+  purchaseInvoiceLines   PurchaseInvoiceLine[]
+  purchaseReturnLines    PurchaseReturnLine[]
+  salesOrderLines        SalesOrderLine[]
+  invoiceItems           InvoiceItem[]
+  exchangeLines          SalesExchangeLine[]
+  certificates           Certificate[]
+  goldCostRecords        GoldCostRecord[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])

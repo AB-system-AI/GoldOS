@@ -154,6 +154,28 @@ import {
   SupplierLedgerRepository,
   SupplierLedgerService,
 } from './accounting/index.js';
+import {
+  GoodsReceiptRepository,
+  GoodsReceiptService,
+  ProcurementService,
+  PurchaseApprovalRepository,
+  PurchaseApprovalService,
+  PurchaseInvoiceRepository,
+  PurchaseInvoiceService,
+  PurchaseReportService,
+  PurchaseRequestRepository,
+  PurchaseRequestService,
+  PurchaseReturnRepository,
+  PurchaseReturnService,
+  PurchaseRfqRepository,
+  PurchaseRfqService,
+  PurchasingDocumentNumberGenerator,
+  PurchasingIntegrationService,
+  SupplierPerformanceService,
+  SupplierQuotationRepository,
+  SupplierQuotationService,
+  TenantPurchasingBootstrapService,
+} from './purchasing/index.js';
 
 export interface BusinessContainerOptions {
   prisma?: PrismaClient;
@@ -228,6 +250,17 @@ export interface BusinessContainer {
   repairOrderService: RepairOrderService;
   ledgerQueryService: LedgerQueryService;
   tenantFinanceBootstrapService: TenantFinanceBootstrapService;
+  purchaseRequestService: PurchaseRequestService;
+  purchaseRfqService: PurchaseRfqService;
+  supplierQuotationService: SupplierQuotationService;
+  goodsReceiptService: GoodsReceiptService;
+  purchaseInvoiceService: PurchaseInvoiceService;
+  purchaseReturnService: PurchaseReturnService;
+  purchaseApprovalService: PurchaseApprovalService;
+  procurementService: ProcurementService;
+  supplierPerformanceService: SupplierPerformanceService;
+  purchaseReportService: PurchaseReportService;
+  tenantPurchasingBootstrapService: TenantPurchasingBootstrapService;
 }
 
 export function createBusinessContainer(options: BusinessContainerOptions = {}): BusinessContainer {
@@ -525,6 +558,82 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
   const manualOverrideRepository = new ManualOverrideRepository(prismaClient);
   const salesEventLogRepository = new SalesEventLogRepository(prismaClient);
   const documentNumberGenerator = new DocumentNumberGenerator(prismaClient);
+  const purchasingDocumentNumberGenerator = new PurchasingDocumentNumberGenerator(prismaClient);
+
+  const purchaseRequestRepository = new PurchaseRequestRepository(prismaClient);
+  const purchaseRfqRepository = new PurchaseRfqRepository(prismaClient);
+  const supplierQuotationRepository = new SupplierQuotationRepository(prismaClient);
+  const goodsReceiptRepository = new GoodsReceiptRepository(prismaClient);
+  const purchaseInvoiceRepository = new PurchaseInvoiceRepository(prismaClient);
+  const purchaseReturnRepository = new PurchaseReturnRepository(prismaClient);
+  const purchaseApprovalRepository = new PurchaseApprovalRepository(prismaClient);
+
+  const purchaseApprovalService = new PurchaseApprovalService(
+    purchaseApprovalRepository,
+    entityOwnershipRepository,
+    auditService,
+  );
+
+  const purchasingIntegrationService = new PurchasingIntegrationService(
+    inventoryItemService,
+    goldCostRepository,
+    priceHistoryRepository,
+    purchaseAccountingIntegrationService,
+  );
+
+  const purchaseRequestService = new PurchaseRequestService(
+    purchaseRequestRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    purchaseApprovalService,
+    auditService,
+  );
+  const purchaseRfqService = new PurchaseRfqService(
+    purchaseRfqRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    auditService,
+  );
+  const supplierQuotationService = new SupplierQuotationService(
+    supplierQuotationRepository,
+    purchaseRfqRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    auditService,
+  );
+  const supplierPerformanceService = new SupplierPerformanceService(prismaClient);
+  const goodsReceiptService = new GoodsReceiptService(
+    goodsReceiptRepository,
+    purchaseOrderRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    purchasingIntegrationService,
+    supplierPerformanceService,
+    auditService,
+  );
+  const purchaseInvoiceService = new PurchaseInvoiceService(
+    purchaseInvoiceRepository,
+    purchaseOrderRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    purchasingIntegrationService,
+    auditService,
+  );
+  const purchaseReturnService = new PurchaseReturnService(
+    purchaseReturnRepository,
+    entityOwnershipRepository,
+    purchasingDocumentNumberGenerator,
+    movementEngine,
+    lifecycleEngine,
+    purchaseApprovalService,
+    purchasingIntegrationService,
+    auditService,
+  );
+  const purchaseReportService = new PurchaseReportService(prismaClient);
+  const tenantPurchasingBootstrapService = new TenantPurchasingBootstrapService(
+    purchaseApprovalRepository,
+    auditService,
+  );
 
   const salesNotificationService = new SalesNotificationService(salesEventLogRepository);
   const loyaltyService = new LoyaltyService(loyaltyRepository, auditService);
@@ -571,9 +680,21 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
   const purchaseOrderService = new PurchaseOrderService(
     purchaseOrderRepository,
     entityOwnershipRepository,
-    documentNumberGenerator,
+    purchasingDocumentNumberGenerator,
     auditService,
+    purchaseApprovalService,
     purchaseAccountingIntegrationService,
+  );
+
+  const procurementService = new ProcurementService(
+    purchaseRequestService,
+    purchaseRfqService,
+    supplierQuotationService,
+    purchaseOrderService,
+    goodsReceiptService,
+    purchaseInvoiceService,
+    purchaseRfqRepository,
+    purchaseOrderRepository,
   );
 
   const checkoutOrchestratorService = new CheckoutOrchestratorService(
@@ -728,5 +849,16 @@ export function createBusinessContainer(options: BusinessContainerOptions = {}):
     repairOrderService,
     ledgerQueryService,
     tenantFinanceBootstrapService,
+    purchaseRequestService,
+    purchaseRfqService,
+    supplierQuotationService,
+    goodsReceiptService,
+    purchaseInvoiceService,
+    purchaseReturnService,
+    purchaseApprovalService,
+    procurementService,
+    supplierPerformanceService,
+    purchaseReportService,
+    tenantPurchasingBootstrapService,
   };
 }

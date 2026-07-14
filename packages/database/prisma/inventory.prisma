@@ -48,6 +48,8 @@ model InventoryItem {
   exchangeLines       SalesExchangeLine[]
   buybackTransactions BuybackTransaction[]
   goldCostRecords     GoldCostRecord[]
+  goodsReceiptLines   GoodsReceiptLine[]
+  purchaseReturnLines PurchaseReturnLine[]
 
   @@unique([tenantId, assetId])
   @@unique([tenantId, serialNumber])

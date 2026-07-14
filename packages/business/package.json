@@ -31,7 +31,7 @@
     "clean": "rimraf dist",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test dist/sales/engines/engines.test.js dist/sales/__tests__/sales-integration.test.js dist/sales/__tests__/db/sales-db.integration.test.js dist/sales/__tests__/db/queue-stress.integration.test.js dist/sales/__tests__/db/sales-operations-db.integration.test.js dist/accounting/__tests__/accounting-engines.test.js dist/accounting/__tests__/accounting-integration.test.js dist/accounting/__tests__/db/accounting-db.integration.test.js"
+    "test": "node --test dist/sales/engines/engines.test.js dist/sales/__tests__/sales-integration.test.js dist/sales/__tests__/db/sales-db.integration.test.js dist/sales/__tests__/db/queue-stress.integration.test.js dist/sales/__tests__/db/sales-operations-db.integration.test.js dist/accounting/__tests__/accounting-engines.test.js dist/accounting/__tests__/accounting-integration.test.js dist/accounting/__tests__/db/accounting-db.integration.test.js dist/purchasing/__tests__/purchase-engines.test.js"
   },
   "dependencies": {
     "@goldos/database": "workspace:*",

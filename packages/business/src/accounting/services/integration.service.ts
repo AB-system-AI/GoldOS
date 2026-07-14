@@ -5,6 +5,11 @@ import {
   buildBuybackRule,
   buildCustomerPaymentRule,
   buildExchangeRule,
+  buildGoodsReceiptRule,
+  buildPurchaseCancellationRule,
+  buildPurchaseInvoiceRule,
+  buildPurchaseInvoiceWithGrnRule,
+  buildPurchaseReturnRule,
   buildPurchaseRule,
   buildSalesInvoiceRule,
   buildSalesReturnFullRule,
@@ -419,6 +424,186 @@ export class PurchaseAccountingIntegrationService {
       entryDate: params.entryDate,
       journalEntryId: journal.id,
       description: 'Supplier payment',
+    });
+
+    return journal;
+  }
+
+  async postGoodsReceipt(
+    tenantId: string,
+    params: {
+      goodsReceiptId: string;
+      supplierId: string;
+      branchId: string;
+      totalAmount: number;
+      entryDate: Date;
+    },
+    context?: AuditContext,
+  ) {
+    const rule = buildGoodsReceiptRule({ totalAmount: params.totalAmount });
+    const journal = await this.postingService.postFromRule(
+      tenantId,
+      {
+        branchId: params.branchId,
+        entryDate: params.entryDate,
+        referenceType: 'GOODS_RECEIPT',
+        referenceId: params.goodsReceiptId,
+        rule,
+        supplierId: params.supplierId,
+      },
+      context,
+    );
+
+    await this.supplierLedgerService.recordEntry(tenantId, {
+      supplierId: params.supplierId,
+      branchId: params.branchId,
+      entryType: 'PURCHASE',
+      referenceType: 'goods_receipt',
+      referenceId: params.goodsReceiptId,
+      debit: params.totalAmount,
+      credit: 0,
+      entryDate: params.entryDate,
+      journalEntryId: journal.id,
+      description: 'Goods receipt',
+    });
+
+    return journal;
+  }
+
+  async postPurchaseInvoice(
+    tenantId: string,
+    params: {
+      purchaseInvoiceId: string;
+      supplierId: string;
+      branchId: string;
+      totalAmount: number;
+      taxAmount?: number;
+      entryDate: Date;
+      linkedToGrn?: boolean;
+    },
+    context?: AuditContext,
+  ) {
+    const taxAmount = params.taxAmount ?? 0;
+    const rule = params.linkedToGrn
+      ? buildPurchaseInvoiceWithGrnRule({ taxAmount })
+      : buildPurchaseInvoiceRule({
+          totalAmount: params.totalAmount,
+          taxAmount,
+        });
+
+    if (!rule) {
+      return null;
+    }
+
+    const journal = await this.postingService.postFromRule(
+      tenantId,
+      {
+        branchId: params.branchId,
+        entryDate: params.entryDate,
+        referenceType: 'PURCHASE_INVOICE',
+        referenceId: params.purchaseInvoiceId,
+        rule,
+        supplierId: params.supplierId,
+      },
+      context,
+    );
+
+    const ledgerAmount = params.linkedToGrn ? taxAmount : params.totalAmount;
+    if (ledgerAmount > 0) {
+      await this.supplierLedgerService.recordEntry(tenantId, {
+        supplierId: params.supplierId,
+        branchId: params.branchId,
+        entryType: 'PURCHASE',
+        referenceType: 'purchase_invoice',
+        referenceId: params.purchaseInvoiceId,
+        debit: ledgerAmount,
+        credit: 0,
+        entryDate: params.entryDate,
+        journalEntryId: journal.id,
+        description: params.linkedToGrn ? 'Supplier invoice tax' : 'Supplier invoice',
+      });
+    }
+
+    return journal;
+  }
+
+  async postPurchaseReturn(
+    tenantId: string,
+    params: {
+      purchaseReturnId: string;
+      supplierId: string;
+      branchId: string;
+      totalAmount: number;
+      entryDate: Date;
+    },
+    context?: AuditContext,
+  ) {
+    const rule = buildPurchaseReturnRule({ totalAmount: params.totalAmount });
+    const journal = await this.postingService.postFromRule(
+      tenantId,
+      {
+        branchId: params.branchId,
+        entryDate: params.entryDate,
+        referenceType: 'PURCHASE_RETURN',
+        referenceId: params.purchaseReturnId,
+        rule,
+        supplierId: params.supplierId,
+      },
+      context,
+    );
+
+    await this.supplierLedgerService.recordEntry(tenantId, {
+      supplierId: params.supplierId,
+      branchId: params.branchId,
+      entryType: 'SUPPLIER_CREDIT',
+      referenceType: 'purchase_return',
+      referenceId: params.purchaseReturnId,
+      debit: 0,
+      credit: params.totalAmount,
+      entryDate: params.entryDate,
+      journalEntryId: journal.id,
+      description: 'Purchase return credit',
+    });
+
+    return journal;
+  }
+
+  async postPurchaseCancellation(
+    tenantId: string,
+    params: {
+      purchaseOrderId: string;
+      supplierId: string;
+      branchId: string;
+      totalAmount: number;
+      entryDate: Date;
+    },
+    context?: AuditContext,
+  ) {
+    const rule = buildPurchaseCancellationRule({ totalAmount: params.totalAmount });
+    const journal = await this.postingService.postFromRule(
+      tenantId,
+      {
+        branchId: params.branchId,
+        entryDate: params.entryDate,
+        referenceType: 'PURCHASE_ORDER',
+        referenceId: params.purchaseOrderId,
+        rule,
+        supplierId: params.supplierId,
+      },
+      context,
+    );
+
+    await this.supplierLedgerService.recordEntry(tenantId, {
+      supplierId: params.supplierId,
+      branchId: params.branchId,
+      entryType: 'ADJUSTMENT',
+      referenceType: 'purchase_order',
+      referenceId: params.purchaseOrderId,
+      debit: 0,
+      credit: params.totalAmount,
+      entryDate: params.entryDate,
+      journalEntryId: journal.id,
+      description: 'Purchase cancellation',
     });
 
     return journal;
